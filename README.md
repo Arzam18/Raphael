@@ -24,8 +24,13 @@ The following are the historic elo for Raphael.
     <th><a href="https://ipmanchess.yolasite.com/r9-7945hx.php">Ipman R9</a></th>
   </tr>
   <tr align="center">
+    <td>4.1.0     </td> <td>Mar 17, 2026 </td>
+    <td>3728*     </td> <td>3582*        </td>
+    <td>          </td> <td>             </td>
+  </tr>
+  <tr align="center">
     <td>4.0.0     </td> <td>Apr 26, 2026 </td>
-    <td>3697*     </td> <td>3568*        </td>
+    <td>3697*     </td> <td>3606 (#23)   </td>
     <td>3532 (#31)</td> <td>3487 (#20**) </td>
   </tr>
   <tr align="center">
@@ -171,7 +176,7 @@ To see all supported commands, run `uci.exe help`
     - [x] Reverse futility pruning          (`v2.2+`)
     - [x] Null move pruning                 (`v2.2+`)
     - [x] Razoring                          (`v2.3+`)
-    - [ ] Probcut
+    - [x] Probcut                           (`v4.1+`)
     - [x] Late move pruning                 (`v2.3+`)
     - [x] Futility pruning                  (`v2.3+`)
     - [x] SEE pruning                       (`v2.3+`)
@@ -246,6 +251,7 @@ To see all supported commands, run `uci.exe help`
     - [x] Finetuning                        (`v3.3+`)
     - [x] Pairwise multiplication           (`v4.0+`)
     - [x] Multilayer network                (`v4.1+`)
+    - [x] Sparse affine                     (`v4.1+`)
     - [ ] Dual activations
     - [ ] Threat Inputs
     - [ ] Relabeling/distillation
