@@ -185,9 +185,9 @@ else
     PGO_USE_FLAGS := -fprofile-use -fprofile-correction
     PGO_MERGE     :=
     ifeq ($(DETECTED_OS),Windows)
-        PGO_CLEAN := del /Q *.gcda src\Raphael\*.gcda 2>nul
+        PGO_CLEAN := del /Q *.gcda src\Raphael\*.gcda src\NNUE\*.gcda 2>nul
     else
-        PGO_CLEAN := rm -rf *.gcda src/Raphael/*.gcda
+        PGO_CLEAN := rm -rf *.gcda src/Raphael/*.gcda src/NNUE/*.gcda
     endif
 endif
 
@@ -223,6 +223,27 @@ endif
 override CXXFLAGS += -DNETWORK_FILE=$(EVALFILE)
 
 $(info Using network: $(EVALFILE))
+
+#---------------------------------------------------------------------------------------------------
+# Version Info
+#---------------------------------------------------------------------------------------------------
+
+ifeq ($(DETECTED_OS),Windows)
+    VERSION_BASE := $(shell type version.txt)
+else
+    VERSION_BASE := $(shell cat version.txt)
+endif
+
+ifeq ($(DEBUG),release)
+    VERSION = $(VERSION_BASE)
+else
+    COMMIT_SHA := $(shell git rev-parse --short HEAD)
+    VERSION = $(VERSION_BASE)-dev-$(COMMIT_SHA)
+endif
+
+override CXXFLAGS += -DVERSION=\"$(VERSION)\"
+
+$(info Building version: $(VERSION))
 $(info )
 
 #---------------------------------------------------------------------------------------------------
@@ -279,22 +300,11 @@ __network_preprocess: $(PERM_EXE) $(EVALFILE)
 
 .PHONY: release_all
 release_all:
-ifeq ($(DETECTED_OS),Windows)
-	@if "$(VERSION)"=="" ( \
-		echo VERSION is required (make release_all VERSION=x.y.z) & \
-		exit /b 1 \
-	)
-else
-	@if [ -z "$(VERSION)" ]; then \
-		echo "VERSION is required (make release_all VERSION=x.y.z)"; \
-		exit 1; \
-	fi
-endif
-	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION)-$(DETECTED_OS)-avx512-vnni ARCH=avx512_vnni DEBUG=release -j uci
-	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION)-$(DETECTED_OS)-avx512 ARCH=avx512 DEBUG=release -j uci
-	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION)-$(DETECTED_OS)-avx2-bmi2 ARCH=avx2_bmi2 DEBUG=release PGO=on -j uci
-	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION)-$(DETECTED_OS)-avx2 ARCH=avx2 DEBUG=release PGO=on -j uci
-	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION)-$(DETECTED_OS)-generic ARCH=generic DEBUG=release -j uci
+	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION_BASE)-$(DETECTED_OS)-avx512-vnni ARCH=avx512_vnni DEBUG=release -j uci
+	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION_BASE)-$(DETECTED_OS)-avx512 ARCH=avx512 DEBUG=release -j uci
+	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION_BASE)-$(DETECTED_OS)-avx2-bmi2 ARCH=avx2_bmi2 DEBUG=release PGO=on -j uci
+	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION_BASE)-$(DETECTED_OS)-avx2 ARCH=avx2 DEBUG=release PGO=on -j uci
+	$(MAKE) clean && $(MAKE) EXE=Raphael-$(VERSION_BASE)-$(DETECTED_OS)-generic ARCH=generic DEBUG=release -j uci
 
 #---------------------------------------------------------------------------------------------------
 # Packages
