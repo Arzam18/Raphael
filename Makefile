@@ -14,7 +14,7 @@ PERM_EXE := perm
 EVALFILE := default
 
 # Architecture configuration
-ARCH ?= native
+ARCH ?= auto
 
 # Debug option
 DEBUG ?= off
@@ -104,6 +104,43 @@ endif
 #---------------------------------------------------------------------------------------------------
 # Architecture Flags
 #---------------------------------------------------------------------------------------------------
+
+# Autodetect arch if ARCH=auto
+ifeq ($(ARCH),auto)
+    ifeq ($(DETECTED_OS),Windows)
+        HAS_VNNI := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__AVX512VNNI__" | find /c /v "")
+        HAS_AVX512 := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__AVX512F__" | find /c /v "")
+        HAS_BMI2 := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__BMI2__" | find /c /v "")
+        HAS_AVX2 := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__AVX2__" | find /c /v "")
+        IS_ZEN1 := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__znver1__" | find /c /v "")
+        IS_ZEN2 := $(shell echo | $(CXX) -march=native -dM -E - | findstr /c:"__znver2__" | find /c /v "")
+    else
+        HAS_VNNI := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__AVX512VNNI__")
+        HAS_AVX512 := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__AVX512F__")
+        HAS_BMI2 := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__BMI2__")
+        HAS_AVX2 := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__AVX2__")
+        IS_ZEN1 := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__znver1__")
+        IS_ZEN2 := $(shell echo | $(CXX) -march=native -dM -E - | grep -c "__znver2__")
+    endif
+
+    # select best build
+    override ARCH := generic
+    ifneq ($(HAS_VNNI),0)
+        override ARCH := avx512_vnni
+    else ifneq ($(HAS_AVX512),0)
+        override ARCH := avx512
+    else ifneq ($(HAS_BMI2),0)
+        override ARCH := avx2
+        # only enable bmi2 if we are not on zen1/2
+        ifeq ($(IS_ZEN1),0)
+            ifeq ($(IS_ZEN2),0)
+                override ARCH := avx2_bmi2
+            endif
+        endif
+    else ifneq ($(HAS_AVX2),0)
+        override ARCH := avx2
+    endif
+endif
 
 CCFLAGS_NATIVE      := -march=native
 CCFLAGS_AVX512_VNNI := -march=icelake-client -DCHESS_USE_PEXT
@@ -213,7 +250,7 @@ ifeq ($(EVALFILE),default)
     else
         DEFAULT_NET := $(shell cat network.txt)
     endif
-    EVALFILE = $(DEFAULT_NET).nnue
+    EVALFILE := $(DEFAULT_NET).nnue
 
 $(EVALFILE):
 	curl -sL https://github.com/Orbital-Web/Raphael-Net/releases/download/$(DEFAULT_NET)/$(DEFAULT_NET).nnue -o $(EVALFILE)
@@ -235,10 +272,10 @@ else
 endif
 
 ifeq ($(DEBUG),release)
-    VERSION = $(VERSION_BASE)
+    VERSION := $(VERSION_BASE)
 else
     COMMIT_SHA := $(shell git rev-parse --short HEAD)
-    VERSION = $(VERSION_BASE)-dev-$(COMMIT_SHA)
+    VERSION := $(VERSION_BASE)-dev-$(COMMIT_SHA)
 endif
 
 override CXXFLAGS += -DVERSION=\"$(VERSION)\"
