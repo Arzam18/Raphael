@@ -2,8 +2,8 @@
 # 1. run net_export.py quantised.bin
 # 2. compile with EVALFILE=processed_quantised.bin DEBUG=net and run bench
 # 3. run net_export.py quantised.bin ft_activations.json
-import sys
 import json
+import sys
 
 import numpy as np
 

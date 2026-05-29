@@ -277,4 +277,4 @@ WhitespaceSensitiveMacros:
   - NS_SWIFT_NAME
   - PP_STRINGIZE
   - STRINGIZE
-OneLineFormatOffRegex: "// fmt: skip"
+OneLineFormatOffRegex: "^\\s*#.*|// fmt: skip"

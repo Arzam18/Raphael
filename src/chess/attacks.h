@@ -1,5 +1,6 @@
 #pragma once
 #include <chess/bitboard.h>
+
 #ifdef CHESS_USE_PEXT
     #include <immintrin.h>
 #endif

@@ -2,11 +2,11 @@
 #include <chess/types.h>
 
 #if defined(__AVX512F__)
-    #include <immintrin.h>
-    #define USE_AVX512
-    #define USE_SIMD 512
-    #define ALIGNMENT 64
-    #define SIMD_REGS 32
+#include <immintrin.h>
+#define USE_AVX512
+#define USE_SIMD 512
+#define ALIGNMENT 64
+#define SIMD_REGS 32
 using VecU8 = __m512i;   // a list of 64x u8
 using VecI8 = __m512i;   // a list of 64x i8
 using VecI16 = __m512i;  // a list of 32x i16
@@ -241,11 +241,11 @@ inline i32 hadd_i32(VecI32 reg) {
 }
 
 #elif defined(__AVX__) || defined(__AVX2__)
-    #include <immintrin.h>
-    #define USE_AVX2
-    #define USE_SIMD 256
-    #define ALIGNMENT 32
-    #define SIMD_REGS 16
+#include <immintrin.h>
+#define USE_AVX2
+#define USE_SIMD 256
+#define ALIGNMENT 32
+#define SIMD_REGS 16
 using VecU8 = __m256i;   // a list of 32x u8
 using VecI8 = __m256i;   // a list of 32x i8
 using VecI16 = __m256i;  // a list of 16x i16

@@ -87,14 +87,14 @@ void Nnue::NnueFinnyEntry::sync(
     VecI16 accs[8];
 
     for (i32 i = 0; i < n_chunks; i += 8) {
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++) accs[r] = load_i16(&values[(i + r) * regw]);
 
         // add features
         for (i32 f = 0; f < n_adds; f++) {
             const auto fidx = adds[f];
 
-            #pragma GCC unroll 32  // fmt: skip
+            #pragma GCC unroll 32
             for (i32 r = 0; r < 8; r++)
                 accs[r] = add_i16(accs[r], load_i16(&weights[fidx][(i + r) * regw]));
         }
@@ -103,12 +103,12 @@ void Nnue::NnueFinnyEntry::sync(
         for (i32 f = 0; f < n_subs; f++) {
             const auto fidx = subs[f];
 
-            #pragma GCC unroll 32  // fmt: skip
+            #pragma GCC unroll 32
             for (i32 r = 0; r < 8; r++)
                 accs[r] = sub_i16(accs[r], load_i16(&weights[fidx][(i + r) * regw]));
         }
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++) store_i16(&values[(i + r) * regw], accs[r]);
     }
 #else
@@ -175,29 +175,29 @@ void Nnue::NnueAccumulator::apply_updates(
     VecI16 accs[8];
 
     for (i32 i = 0; i < n_chunks; i += 8) {
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++)
             accs[r] = load_i16(&old_acc.values[perspective][(i + r) * regw]);
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++)
             accs[r] = sub_i16(accs[r], load_i16(&weights[sub1][(i + r) * regw]));
 
         if (psq_subs.size() > 1)
-            #pragma GCC unroll 32  // fmt: skip
+            #pragma GCC unroll 32
             for (i32 r = 0; r < 8; r++)
                 accs[r] = sub_i16(accs[r], load_i16(&weights[sub2][(i + r) * regw]));
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++)
             accs[r] = add_i16(accs[r], load_i16(&weights[add1][(i + r) * regw]));
 
         if (psq_adds.size() > 1)
-            #pragma GCC unroll 32  // fmt: skip
+            #pragma GCC unroll 32
             for (i32 r = 0; r < 8; r++)
                 accs[r] = add_i16(accs[r], load_i16(&weights[add2][(i + r) * regw]));
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < 8; r++) store_i16(&values[perspective][(i + r) * regw], accs[r]);
     }
 #else
@@ -495,7 +495,7 @@ void Nnue::forward_l1(
     constexpr i32 n_chunks = L2_SIZE / regw32;
     VecI32 l1_pre[n_chunks][4];
 
-    #pragma GCC unroll 32  // fmt: skip
+    #pragma GCC unroll 32
     for (i32 r = 0; r < n_chunks; r++) {
         l1_pre[r][0] = zero_i32();
         l1_pre[r][1] = zero_i32();
@@ -582,7 +582,7 @@ void Nnue::forward_l2l3(const i32 l1_out[L2_SIZE], i64& l3_out, i32 bucket_idx) 
     constexpr i32 n_chunks = L3_SIZE / regw32;
     VecI32 l2_pre[n_chunks];
 
-    #pragma GCC unroll 32  // fmt: skip
+    #pragma GCC unroll 32
     for (i32 r = 0; r < n_chunks; r++) l2_pre[r] = load_i32(&params->b2[bucket_idx][r * regw32]);
 
     for (i32 i = 0; i < L2_SIZE; i++) {
@@ -590,11 +590,11 @@ void Nnue::forward_l2l3(const i32 l1_out[L2_SIZE], i64& l3_out, i32 bucket_idx) 
         VecI32 input = full_i32(l1_out[i]);
         VecI32 weights[n_chunks];
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < n_chunks; r++)
             weights[r] = load_i32(&params->W2[bucket_idx][i][r * regw32]);
 
-        #pragma GCC unroll 32  // fmt: skip
+        #pragma GCC unroll 32
         for (i32 r = 0; r < n_chunks; r++) l2_pre[r] = fmadd_i32(input, weights[r], l2_pre[r]);
     }
 
