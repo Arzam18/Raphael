@@ -1,14 +1,11 @@
-# Raphael
+# <div align="center"><img src=src/assets/logo/Raphael_Logo_HL_NoBG_Text.png alt="Raphael Logo" width=400 /></div>
 
-Raphael is a superhuman UCI Chess Engine built using C++. It also comes with a GUI built using [SFML](https://www.sfml-dev.org/).
+Raphael is a superhuman UCI Chess Engine built using C++.
+It also comes with a GUI built using [SFML](https://www.sfml-dev.org/).
 
-You can [scroll to the bottom](#raphael-engine) to see a list of features currently implemented, and also download the prebuilt binaries to try Raphael out for yourself.
+You can [scroll to the bottom](#raphael-engine) to see a list of features currently implemented, and also download the prebuilt binaries to try out Raphael for yourself.
 
 Raphael is largely inspired by [Sebastian Lague's Coding Adventure series on implementing a Chess Engine](https://youtu.be/U4ogK0MIzqk).
-
-<p align="center">
-  <img src="https://github.com/Orbital-Web/Raphael/blob/8667a6f6db60c5cacce297145246f89a22fa5333/Demo.png" alt="demo of Raphael" width=400/>
-</p>
 
 ## Elo
 
@@ -26,7 +23,7 @@ The following are the historic elo for Raphael.
   <tr align="center">
     <td>4.1.0     </td> <td>Mar 17, 2026 </td>
     <td>3728*     </td> <td>3582*        </td>
-  <td>3555 (#22)</td> <td>             </td>
+    <td>3555 (#22)</td> <td>             </td>
   </tr>
   <tr align="center">
     <td>4.0.0     </td> <td>Apr 26, 2026 </td>
@@ -345,5 +342,6 @@ Furthermore, the following individuals have inspired me or have helped me tremen
 - [Sp00ph](https://github.com/Sp00ph), author of [Icarus](https://github.com/Sp00ph/icarus)
 - [Dan](https://github.com/kelseyde), author of [Hobbes](https://github.com/kelseyde/hobbes-chess-engine)
 - [Tecci](https://github.com/Teccii), author of [Cherry](https://github.com/Teccii/cherry)
+- [Mitsune Mei](https://x.com/mitsune_mei) for creating the Raphael logo
 - [Zahrizhal Ali](https://github.com/ZahrizhalAli) for providing me with kaggle compute for running tests, datagen, etc.
 - and many others on the Stockfish and AlphaBeta Discord servers
