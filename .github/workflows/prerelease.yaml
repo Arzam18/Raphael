@@ -48,7 +48,7 @@ jobs:
 
       - name: Build
         shell: cmd
-        run: mingw32-make CXX=g++ prerelease_all
+        run: make CXX=g++ ARCH=native SHELL=cmd.exe prerelease_all
 
       - name: Collect binaries
         run: |
