@@ -20,23 +20,24 @@ public:
     void check(i32 depth) {
         if (depth == 0) return;
 
-        const auto& oldboard = position_.board();
+        const auto& board = position_.board();
         chess::MoveList moves;
-        chess::Movegen::generate_legals(moves, oldboard);
+        chess::Movegen::generate_legals(moves, board);
 
         for (const auto& smove : moves) {
             position_.make_move(smove.move);
             const auto eval = position_.evaluate(false);
 
             const auto& newboard = position_.board();
-            refnet_.set_board(newboard);
+            refnet_.observer().set_board(newboard);
             const auto true_eval = refnet_.evaluate(newboard);
 
             if (eval != true_eval) {
+                position_.unmake_move();
                 cout << "fail: eval after make_move not consistent with eval after set_board "
                      << eval << " != " << true_eval << " after move "
-                     << chess::uci::from_move(smove.move, oldboard.chess960()) << " from position "
-                     << oldboard.get_fen() << "\n"
+                     << chess::uci::from_move(smove.move, board.chess960()) << " from position "
+                     << board.get_fen() << "\n"
                      << flush;
 
                 CHECK(false);
@@ -51,13 +52,14 @@ public:
         const auto eval = position_.evaluate(false);
 
         const auto& newboard = position_.board();
-        refnet_.set_board(newboard);
+        refnet_.observer().set_board(newboard);
         const auto true_eval = refnet_.evaluate(newboard);
 
         if (eval != true_eval) {
+            position_.unmake_move();
             cout << "fail: eval after make_move not consistent with eval after set_board " << eval
                  << " != " << true_eval << " after nullmove " << " from position "
-                 << oldboard.get_fen() << "\n"
+                 << board.get_fen() << "\n"
                  << flush;
 
             CHECK(false);

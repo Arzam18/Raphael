@@ -4,7 +4,7 @@
 
 
 
-#if defined(__AVX512F__)
+#if defined(__AVX512VBMI2__)  // also means we have AVX512 and AVX512VNNI
 #include <immintrin.h>
 #define USE_AVX512
 #define USE_SIMD 512
@@ -148,7 +148,6 @@ inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm512_mulhi_epi16(a, b); }
  */
 inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm512_madd_epi16(a, b); }
 
-
 /** Does an element-wise clamping of a VecI16 register
  *
  * \param reg register to clamp
@@ -187,6 +186,22 @@ inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm512_slli_epi16(reg, 
  */
 inline VecI32 rshift_i32(VecI32 reg, i32 shift) { return _mm512_srai_epi32(reg, shift); }
 
+/** Extracts and converts the first 32 values of a VecI8 register to a VecI16 register
+ *
+ * \param reg register to convert
+ * \returns the converted register
+ */
+inline VecI16 low_i8_i16(VecI8 reg) { return _mm512_cvtepi8_epi16(_mm512_castsi512_si256(reg)); }
+
+/** Extracts and converts the last 32 values of a VecI8 register to a VecI16 register
+ *
+ * \param reg register to convert
+ * \returns the converted register
+ */
+inline VecI16 high_i8_i16(VecI8 reg) {
+    return _mm512_cvtepi8_epi16(_mm512_extracti64x4_epi64(reg, 1));
+}
+
 /** Packs two VecI16 registers into a VecU8 register
  * Result is [a[0:8] b[0:8] a[8:16] b[8:16] a[16:24] b[16:24] a[24:32] b[24:32]]
  *
@@ -219,13 +234,7 @@ inline u32 nonzero_mask(VecU8 reg) { return _mm512_cmpgt_epi32_mask(reg, zero_i3
  * \param c register 3
  * \returns the result of the accumulated dot product
  */
-inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) {
-#ifdef __AVX512VNNI__
-    return _mm512_dpbusd_epi32(a, b, c);
-#else
-    return add_i32(a, madd_i16(_mm512_maddubs_epi16(b, c), full_i16(1)));
-#endif
-}
+inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) { return _mm512_dpbusd_epi32(a, b, c); }
 
 /** Does an element-wise fused multiply add a[i] * b[i] + c[i]
  *
@@ -453,6 +462,22 @@ inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm256_slli_epi16(reg, 
  * \returns the shifted register
  */
 inline VecI32 rshift_i32(VecI32 reg, i32 shift) { return _mm256_srai_epi32(reg, shift); }
+
+/** Extracts and converts the first 16 values of a VecI8 register to a VecI16 register
+ *
+ * \param reg register to convert
+ * \returns the converted register
+ */
+inline VecI16 low_i8_i16(VecI8 reg) { return _mm256_cvtepi8_epi16(_mm256_castsi256_si128(reg)); }
+
+/** Extracts and converts the last 16 values of a VecI8 register to a VecI16 register
+ *
+ * \param reg register to convert
+ * \returns the converted register
+ */
+inline VecI16 high_i8_i16(VecI8 reg) {
+    return _mm256_cvtepi8_epi16(_mm256_extracti128_si256(reg, 1));
+}
 
 /** Packs two VecI16 registers into a VecU8 register
  * Result is [a[:8] b[:8] a[8:] b[8:]]

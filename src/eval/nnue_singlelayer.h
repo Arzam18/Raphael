@@ -8,18 +8,14 @@
 namespace raphael::nnue {
 class Nnue {
 public:
-    enum class NnuePerm : u8 { NONE = 0, AVX2 = 1, AVX512 = 2 };
     struct NnueParams {
-        // accumulator: N_INPUTS -> L1_SIZE
-        alignas(ALIGNMENT) i16 W0[N_INBUCKETS][N_INPUTS][L1_SIZE];
+        // accumulator: (N_PSQ + N_THREATS) -> L1_SIZE
+        alignas(ALIGNMENT) i16 W0_psq[N_INBUCKETS][N_PSQ][L1_SIZE];
+        alignas(ALIGNMENT) i8 W0_ti[N_THREATS][L1_SIZE];
         alignas(ALIGNMENT) i16 b0[L1_SIZE];
         // layer1: L1_SIZE -> 1
         alignas(ALIGNMENT) i16 W1[N_OUTBUCKETS][L1_SIZE];
         alignas(ALIGNMENT) i16 b1[N_OUTBUCKETS];
-
-        // flags
-        NnuePerm permutation;
-        bool sparsity_permed;
     };
 
 private:
@@ -44,21 +40,11 @@ public:
      */
     i32 evaluate(const chess::Board& board);
 
-    /** Sets internal states to match the given board
+    /** Returns the NnueState object to pass into the board for makemove handling
      *
-     * \param board the board to set
+     * \returns this board's state_
      */
-    void set_board(const chess::Board& board);
-
-    /** Updates internal states based on the given move
-     *
-     * \param board current board (before move is played)
-     * \param move the move to make
-     */
-    void make_move(const chess::Board& board, chess::Move move);
-
-    /** Updates internal states to unmake the last move */
-    void unmake_move();
+    NnueState& observer();
 
 #ifdef MEASURE_SPARSITY
     /** Saves the number of times each ft neuron fired to a file and returns the average number of

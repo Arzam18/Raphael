@@ -10,8 +10,9 @@ class Nnue {
 public:
     enum class NnuePerm : u8 { NONE = 0, AVX2 = 1, AVX512 = 2 };
     struct NnueParams {
-        // accumulator: N_INPUTS -> L1_SIZE
-        alignas(ALIGNMENT) i16 W0[N_INBUCKETS][N_INPUTS][L1_SIZE];
+        // accumulator: (N_PSQ + N_THREATS) -> L1_SIZE
+        alignas(ALIGNMENT) i16 W0_psq[N_INBUCKETS][N_PSQ][L1_SIZE];
+        alignas(ALIGNMENT) i8 W0_ti[N_THREATS][L1_SIZE];
         alignas(ALIGNMENT) i16 b0[L1_SIZE];
         // layer1: L1_SIZE -> L2_SIZE
         alignas(ALIGNMENT) i8 W1[N_OUTBUCKETS][L1_SIZE / 4][L2_SIZE * 4];
@@ -57,21 +58,11 @@ public:
      */
     i32 evaluate(const chess::Board& board);
 
-    /** Sets internal states to match the given board
+    /** Returns the NnueState object to pass into the board for makemove handling
      *
-     * \param board the board to set
+     * \returns this board's state_
      */
-    void set_board(const chess::Board& board);
-
-    /** Updates internal states based on the given move
-     *
-     * \param board current board (before move is played)
-     * \param move the move to make
-     */
-    void make_move(const chess::Board& board, chess::Move move);
-
-    /** Updates internal states to unmake the last move */
-    void unmake_move();
+    NnueState& observer();
 
 #ifdef MEASURE_SPARSITY
     /** Saves the number of times each ft neuron fired to a file and returns the average number of
@@ -85,12 +76,16 @@ public:
 private:
     /** Activates the output of l0 (the accumulators)
      *
-     * \param acc stm accumulator values
+     * \param acc_psq stm psq accumulator values
+     * \param acc_ti stm ti accumulator values
      * \param l0_out output buffer to write activated l0 outputs to
      * \param sp an iterator into the nonzero blocks of l0_out
      */
     void activate_l0(
-        const i16 acc[L1_SIZE], u8 l0_out[L1_SIZE / 2], [[maybe_unused]] SparseIterator& sp
+        const i16 acc_psq[L1_SIZE],
+        const i16 acc_ti[L1_SIZE],
+        u8 l0_out[L1_SIZE / 2],
+        [[maybe_unused]] SparseIterator& sp
     ) const;
 
     /** Does a forward pass through l1
