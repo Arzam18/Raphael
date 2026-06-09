@@ -434,8 +434,8 @@ void NnueState::update_threats_on_change(
 #ifdef USE_SIMD
 template <bool add, bool outgoing>
 void NnueState::push_focus_threats(
-    geometry::Vector indices,
-    geometry::Vector rays,
+    const geometry::Vector& indices,
+    const geometry::Vector& rays,
     geometry::BitRays br,
     chess::Piece piece,
     chess::Square sq
@@ -494,8 +494,8 @@ void NnueState::push_focus_threats(
 
 template <bool add>
 void NnueState::push_discovered_threats(
-    geometry::Vector indices,
-    geometry::Vector rays,
+    const geometry::Vector& indices,
+    const geometry::Vector& rays,
     geometry::BitRays sliders,
     geometry::BitRays victims
 ) {

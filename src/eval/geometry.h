@@ -33,7 +33,7 @@ struct Vector {
      *
      * \param dst data destination, 8*64 bits
      */
-    void store_into(void* dst);
+    void store_into(void* dst) const;
 
     /** Flip board halves, used for swapping perspectives
      *
@@ -84,7 +84,7 @@ BitRays outgoing_threats(chess::Piece piece, BitRays closest);
  * \param closest closest occupied squares along each direction
  * \returns closest attackers
  */
-BitRays incoming_attackers(Vector bits, BitRays closest);
+BitRays incoming_attackers(const Vector& bits, BitRays closest);
 
 /** Return closest sliders that are attacking us for each direction
  *
@@ -92,14 +92,14 @@ BitRays incoming_attackers(Vector bits, BitRays closest);
  * \param closest closest occupied squares along each direction
  * \returns closest attacking sliders
  */
-BitRays incoming_sliders(Vector bits, BitRays closest);
+BitRays incoming_sliders(const Vector& bits, BitRays closest);
 
 /** Compute nearest occupied squares along each ray direction
  *
  * \param bits mailbox byteboard
  * \returns closest occupied squares along each direction
  */
-BitRays closest_occupied(Vector bits);
+BitRays closest_occupied(const Vector& bits);
 
 /** Returns the permutation for rays from a focus square
  *
@@ -114,7 +114,7 @@ Permutation permutation_for(chess::Square focus);
  * \param masked_mailbox mailbox byteboard
  * \returns the piece types and piece bits permuted into ray space
  */
-std::pair<Vector, Vector> permute_mailbox(const Permutation& perm, Vector masked_mailbox);
+std::pair<Vector, Vector> permute_mailbox(const Permutation& perm, const Vector& masked_mailbox);
 
 /** Permutes a mailbox into ray space
  *

@@ -141,7 +141,7 @@ static constexpr array<Bit, 64> INCOMING_SLIDER_MASK = [] {
 #ifdef USE_AVX512
 Vector Vector::load(const void* src) { return {_mm512_loadu_si512(src)}; }
 
-void Vector::store_into(void* dst) { _mm512_store_si512(dst, raw); }
+void Vector::store_into(void* dst) const { _mm512_store_si512(dst, raw); }
 
 Vector Vector::flip() const { return {_mm512_shuffle_i64x2(raw, raw, 0b01001110)}; }
 
@@ -153,7 +153,7 @@ Vector Vector::load(const void* src) {
     };
 }
 
-void Vector::store_into(void* dst) {
+void Vector::store_into(void* dst) const {
     _mm256_store_si256(reinterpret_cast<__m256i*>(dst) + 0, raw[0]);
     _mm256_store_si256(reinterpret_cast<__m256i*>(dst) + 1, raw[1]);
 }
@@ -179,17 +179,17 @@ BitRays outgoing_threats(chess::Piece piece, BitRays closest) {
 
 
 #ifdef USE_AVX512
-BitRays incoming_attackers(Vector bits, BitRays closest) {
+BitRays incoming_attackers(const Vector& bits, BitRays closest) {
     const auto mask = Vector::load(internal::INCOMING_THREATS_MASK.data());
     return _mm512_test_epi8_mask(bits.raw, mask.raw) & closest;
 }
 
-BitRays incoming_sliders(Vector bits, BitRays closest) {
+BitRays incoming_sliders(const Vector& bits, BitRays closest) {
     const auto mask = Vector::load(internal::INCOMING_SLIDER_MASK.data());
     return _mm512_test_epi8_mask(bits.raw, mask.raw) & closest & 0xFE'FE'FE'FE'FE'FE'FE'FE;
 }
 
-BitRays closest_occupied(Vector bits) {
+BitRays closest_occupied(const Vector& bits) {
     const BitRays occupied = _mm512_test_epi8_mask(bits.raw, bits.raw);
     const BitRays o = occupied | 0x81'81'81'81'81'81'81'81;
     return (o ^ (o - 0x03'03'03'03'03'03'03'03)) & occupied;
@@ -201,7 +201,7 @@ Permutation permutation_for(chess::Square focus) {
     return {indices, valid};
 }
 
-pair<Vector, Vector> permute_mailbox(const Permutation& perm, Vector masked_mailbox) {
+pair<Vector, Vector> permute_mailbox(const Permutation& perm, const Vector& masked_mailbox) {
     const auto lut = _mm512_broadcast_i32x4(
         _mm_loadu_si128(reinterpret_cast<const __m128i*>(internal::PIECE_TO_BIT.data()))
     );
@@ -230,7 +230,7 @@ std::pair<Vector, Vector> permute_mailbox(
 }
 
 #elif defined(USE_AVX2)
-BitRays incoming_attackers(Vector bits, BitRays closest) {
+BitRays incoming_attackers(const Vector& bits, BitRays closest) {
     // AND every 8 bits with the threats mask and find the nonzeros
     const auto mask = Vector::load(internal::INCOMING_THREATS_MASK.data());
     const Vector v{
@@ -242,7 +242,7 @@ BitRays incoming_attackers(Vector bits, BitRays closest) {
     return ~v.to_mask() & closest;
 }
 
-BitRays incoming_sliders(Vector bits, BitRays closest) {
+BitRays incoming_sliders(const Vector& bits, BitRays closest) {
     // AND every 8 bits with the sliders mask and find the nonzeros
     const auto mask = Vector::load(internal::INCOMING_SLIDER_MASK.data());
     const Vector v{
@@ -254,7 +254,7 @@ BitRays incoming_sliders(Vector bits, BitRays closest) {
     return ~v.to_mask() & closest & 0xFE'FE'FE'FE'FE'FE'FE'FE;  // ignore knight rays
 }
 
-BitRays closest_occupied(Vector bits) {
+BitRays closest_occupied(const Vector& bits) {
     // https://87flowers.com/byteboard-attack-tables-1
     // e.g., if we are on square d4 and there is a piece north 2 steps (d6), the bit for that
     // north 2 step ray will be set
@@ -279,7 +279,7 @@ Permutation permutation_for(chess::Square focus) {
     return {indices, invalid};
 }
 
-pair<Vector, Vector> permute_mailbox(const Permutation& perm, Vector masked_mailbox) {
+pair<Vector, Vector> permute_mailbox(const Permutation& perm, const Vector& masked_mailbox) {
     const auto lut = _mm256_broadcastsi128_si256(
         _mm_loadu_si128(reinterpret_cast<const __m128i*>(internal::PIECE_TO_BIT.data()))
     );
