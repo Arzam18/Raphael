@@ -139,6 +139,7 @@ inline bool set_tunable(const std::string& name, i32 value) {
     return false;
 }
 
+// clang-format off
     #define Tunable(name, value, min_val, max_val, tunable)      \
         static_assert((min_val <= value) && (value <= max_val)); \
         inline raphael::SpinOption<tunable> name { #name, value, min_val, max_val, nullptr }
@@ -154,6 +155,7 @@ inline bool set_tunable(const std::string& name, i32 value) {
     #define TunableCallback(name, value, min_val, max_val, callback, tunable) \
         static_assert((min_val <= value) && (value <= max_val));              \
         static constexpr i32 name = value
+// clang-format on
 #endif
 
 template <bool tunable>
@@ -250,6 +252,7 @@ Tunable(PC_SEE_FACTOR, 125, 64, 256, true);
 
 inline MultiArray<i32, 2, 256> LMP_TABLE;  // lmp moves threshold[improving][depth]
 TunableCallback(LMP_THRESH_BASE, 3, 1, 12, update_lmp_table, false);
+Tunable(LMP_HIST_MUL, 512, 256, 1024, true);
 
 Tunable(FP_MAX_DEPTH, 876, 512, 1536, true);
 Tunable(FP_MARGIN_DEPTH_MUL, 44, 32, 384, true);
