@@ -19,81 +19,103 @@ The following are the historic elo for Raphael.
     <th><a href="https://www.computerchess.org.uk/ccrl/4040/cgi/compare_engines.cgi?family=Raphael">CCRL 40/15</a></th>
     <th><a href="http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html">CEGT 40/20</a></th>
     <th><a href="https://ipmanchess.yolasite.com/r9-7945hx.php">Ipman R9</a></th>
+    <th><a href="https://www.sp-cc.de">SPCC</a></th>
+  </tr>
+  <tr align="center">
+    <td>4.2.0-dev </td> <td>             </td>
+    <td>          </td> <td>             </td>
+    <td>          </td> <td>             </td>
+    <td>3710 (#11)</td>
   </tr>
   <tr align="center">
     <td>4.1.0     </td> <td>Mar 17, 2026 </td>
     <td>3728*     </td> <td>3582*        </td>
     <td>3555 (#22)</td> <td>             </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>4.0.0     </td> <td>Apr 26, 2026 </td>
     <td>3697*     </td> <td>3606 (#23)   </td>
     <td>3532 (#31)</td> <td>3487 (#20**) </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>3.3.0</td> <td>Apr 06, 2026</td>
     <td>3670 </td> <td>3558 </td>
     <td>3521 </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>3.2.0</td> <td>Mar 19, 2026</td>
     <td>3612*</td> <td>3484 </td>
     <td>3433 </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>3.1.0</td> <td>Mar 01, 2026</td>
     <td>3510 </td> <td>3416 </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>3.0.0</td> <td>Feb 12, 2026</td>
     <td>3252 </td> <td>3206 </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>2.3.0</td> <td>Jan 25, 2026</td>
     <td>3146*</td> <td>3061 </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>2.2.0</td> <td>Jan 08, 2026</td>
     <td>3035*</td> <td>2953 </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>2.1.0</td> <td>Dec 31, 2025</td>
     <td>2739*</td> <td>2689 </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>2.0.0</td> <td>Dec 23, 2025</td>
     <td>2646*</td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>1.8.0</td> <td>Dec 27, 2024</td>
     <td>2223*</td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>1.7.6</td> <td>Dec 16, 2024</td>
     <td>1970 </td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>1.7.0</td> <td>Aug 26, 2023</td>
     <td>1853 </td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>1.6.0</td> <td>Aug 20, 2023</td>
     <td>1797*</td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
   <tr align="center">
     <td>1.5.0</td> <td>Aug 16, 2023</td>
     <td>1764*</td> <td>     </td>
     <td>     </td> <td>     </td>
+    <td>          </td>
   </tr>
 </table>
 *estimated<br>

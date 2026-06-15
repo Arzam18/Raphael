@@ -35,9 +35,9 @@ struct Vector {
      */
     void store_into(void* dst) const;
 
-    /** Flip board halves, used for swapping perspectives
+    /** Rotates the rays by a 180 degrees
      *
-     * \returns the flipped Vector
+     * \returns the rotated vector
      */
     Vector flip() const;
 
