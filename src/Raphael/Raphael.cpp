@@ -40,7 +40,7 @@ const Raphael::EngineOptions& Raphael::default_params() {
     static EngineOptions opts{
         .hash
         = {"Hash", TranspositionTable::DEF_TABLE_SIZE_MB, 1, TranspositionTable::MAX_TABLE_SIZE_MB},
-        .threads = {"Threads", 1, 1, 1024},
+        .threads = {"Threads", 1, 1, 2048},
         .moveoverhead = {"MoveOverhead", 10, 0, 5000},
         .chess960 = {"UCI_Chess960", false},
         .datagen = {"Datagen", false},

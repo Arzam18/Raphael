@@ -8,7 +8,7 @@
 namespace raphael {
 class TranspositionTable {
 public:
-    static constexpr i32 MAX_TABLE_SIZE_MB = 65536;  // 64GB
+    static constexpr i32 MAX_TABLE_SIZE_MB = 524288;  // 512GB
     static constexpr i32 DEF_TABLE_SIZE_MB = 64;
     static constexpr usize ENTRIES_PER_CLUSTER = 5;
 
