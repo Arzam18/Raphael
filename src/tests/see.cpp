@@ -1,4 +1,4 @@
-#include <Raphael/SEE.h>
+#include <Raphael/see.h>
 #include <Raphael/tunable.h>
 
 #include <iostream>
@@ -112,8 +112,8 @@ TEST_SUITE("Raphael SEE") {
             const chess::Board board(testdata.fen);
             const auto move = chess::uci::to_move(board, testdata.mv);
 
-            const auto see1 = raphael::SEE::see(move, board, testdata.exchange);
-            const auto see2 = raphael::SEE::see(move, board, testdata.exchange + 1);
+            const auto see1 = raphael::see::gte(move, board, testdata.exchange);
+            const auto see2 = raphael::see::gte(move, board, testdata.exchange + 1);
 
             // don't want to spam with CHECKs
             if (see1 != true || see2 != false) {

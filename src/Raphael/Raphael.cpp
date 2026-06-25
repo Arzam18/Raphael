@@ -1,8 +1,8 @@
 #include <Raphael/Raphael.h>
-#include <Raphael/SEE.h>
 #include <Raphael/consts.h>
 #include <Raphael/movepick.h>
 #include <Raphael/numa.h>
+#include <Raphael/see.h>
 #include <Raphael/utils.h>
 #include <Raphael/wdl.h>
 
@@ -642,7 +642,7 @@ i32 Raphael::negamax(
             auto generator = MoveGenerator::probcut(&mv->movelist, &position, &history, ttmove);
 
             while (const auto move = generator.next()) {
-                if (!SEE::see(move, board, see_thresh)) continue;
+                if (!see::gte(move, board, see_thresh)) continue;
 
                 tt_.prefetch(board.hash_after<false>(move));
                 position.make_move(move);
@@ -724,7 +724,7 @@ i32 Raphael::negamax(
             const i32 see_thresh = (is_quiet) ? SEE_QUIET_DEPTH_MUL * lmr_fdepth / DEPTH_SCALE
                                                     * lmr_fdepth / DEPTH_SCALE
                                               : SEE_NOISY_DEPTH_MUL * fdepth / DEPTH_SCALE;
-            if (!SEE::see(move, board, see_thresh)) continue;
+            if (!see::gte(move, board, see_thresh)) continue;
         }
 
         // extensions
@@ -999,14 +999,14 @@ i32 Raphael::quiescence(ThreadData& tdata, const i32 ply, i32 alpha, i32 beta, M
 
             // qs futility pruning
             if (!in_check && futility <= alpha && !board.gives_direct_check(move)
-                && !SEE::see(move, board, 1))
+                && !see::gte(move, board, 1))
             {
                 bestscore = max(bestscore, futility);
                 continue;
             }
 
             // qs see pruning
-            if (!SEE::see(move, board, QS_SEE_THRESH)) continue;
+            if (!see::gte(move, board, QS_SEE_THRESH)) continue;
         }
 
         tt_.prefetch(board.hash_after<false>(move));

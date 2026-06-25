@@ -1,8 +1,8 @@
 #pragma once
-#include <Raphael/History.h>
-#include <Raphael/Transposition.h>
+#include <Raphael/history.h>
 #include <Raphael/position.h>
 #include <Raphael/tm.h>
+#include <Raphael/transposition.h>
 
 #include <atomic>
 #include <barrier>
