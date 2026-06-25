@@ -22,14 +22,14 @@ The following are the historic elo for Raphael.
     <th><a href="https://www.sp-cc.de">SPCC</a></th>
   </tr>
   <tr align="center">
-    <td>4.2.0-dev </td> <td>             </td>
-    <td>          </td> <td>             </td>
+    <td>4.2.0     </td> <td>Jun 27, 2026 </td>
+    <td>3740*     </td> <td>3600*        </td>
     <td>          </td> <td>             </td>
     <td>3710 (#11)</td>
   </tr>
   <tr align="center">
-    <td>4.1.0     </td> <td>Mar 17, 2026 </td>
-    <td>3728*     </td> <td>3582*        </td>
+    <td>4.1.0     </td> <td>May 17, 2026 </td>
+    <td>3716 (#26)</td> <td>3612         </td>
     <td>3555 (#22)</td> <td>             </td>
     <td>          </td>
   </tr>
@@ -273,6 +273,7 @@ To see all supported commands, run `uci.exe help`
     - [x] Sparse affine                     (`v4.1+`)
     - [ ] Dual activations
     - [x] Threat Inputs                     (`v4.2+`)
+    - [ ] Pawn Pair Inputs
     - [ ] Relabeling/distillation
 - [x] Time management                       (`v1.0+`)
   - [x] Hard/soft limit                     (`v3.0+`)
@@ -289,9 +290,10 @@ To see all supported commands, run `uci.exe help`
   - [x] Upcoming cycle detection            (`v4.2+`)
 - [x] Multithreading                        (`v4.0+`)
   - [x] Lazy SMP                            (`v4.0+`)
+  - [x] Thread voting                       (`v4.2+`)
+  - [x] NUMA thread pinning                 (`v4.2+`)
   - [ ] Shared corrhist
-  - [ ] Thread voting
-  - [ ] NUMA awareness
+  - [ ] NUMA net replication
 - [x] Tuning                                (`v3.3+`)
   - [x] SPSA                                (`v3.3+`)
   - [x] Fractional depth                    (`v4.0+`)

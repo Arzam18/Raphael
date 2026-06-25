@@ -505,7 +505,7 @@ data: d17         | games: 55.34m (mixed nodes)                | source: cerberu
                   | pos: 5006m                                 | nodes: 5 & 24k soft               | coming from and endgame book.                                                                |
                   |                                            | filter: noisy, checks             |                                                                                              |
 ------------------|--------------------------------------------|-----------------------------------|---------------------------------------------┬------------------------------------------------|
-yogsothoth_v2     | (768x16hm+60144hm->768pw)x2->(32->32->1)x8 | 800sb                             | stc:                                        | Increased L1 size to 768.                      |
+yogsothoth_v2     | ((768x16+60144)hm->768pw)x2->(32->32->1)x8 | 800sb                             | stc:                                        | Increased L1 size to 768.                      |
 merged as #148    | activ: pw->screlu->crelu                   |   data: d8-17 (29.8b)             | Elo   | 17.97 +- 7.54 (95%)                 |                                                |
                   | scale: 276                                 |   lr: 1600b warmup                | SPRT  | 8.0+0.08s Threads=1 Hash=16MB       |                                                |
                   | quant: [255,128,64]                        |       cos(0.001,0.00000243)       | LLR   | 2.95 (-2.25, 2.89) [0.00, 5.00]     |                                                |
@@ -520,9 +520,9 @@ merged as #148    | activ: pw->screlu->crelu                   |   data: d8-17 (
                   | 14, 14, 15, 15                             |                                   |                                             |                                                |
                   | 14, 14, 15, 15                             |                                   |                                             |                                                |
 ------------------|--------------------------------------------|-----------------------------------|---------------------------------------------|------------------------------------------------|
-yogsothoth_v3     | (768x16hm+60144hm->768pw)x2->(32->32->1)x8 | 800sb                             | stc:                                        | Increased finetuning WDL to 0.7.               |
-merged as #151    | activ: pw->screlu->crelu                   |   data: d8-17 (29.8b)             | Elo   | 3.53 +- 2.71 (95%)                  |                                                |
-                  | scale: 276                                 |   lr: 1600b warmup                | SPRT  | 8.0+0.08s Threads=1 Hash=16MB       |                                                |
+yogsothoth_v3     | ((768x16+60144)hm->768pw)x2->(32->32->1)x8 | 800sb                             | stc:                                        | Increased finetuning WDL to 0.7.               |
+default for v4.2  | activ: pw->screlu->crelu                   |   data: d8-17 (29.8b)             | Elo   | 3.53 +- 2.71 (95%)                  |                                                |
+merged as #151    | scale: 253                                 |   lr: 1600b warmup                | SPRT  | 8.0+0.08s Threads=1 Hash=16MB       |                                                |
                   | quant: [255,128,64]                        |       cos(0.001,0.00000243)       | LLR   | 2.94 (-2.25, 2.89) [0.00, 5.00]     |                                                |
                   | optim: AdamW                               |   wdl: lin(0.2, 0.4)              | Games | N: 14650 W: 3502 L: 3353 D: 7795    |                                                |
                   | buckets:                                   | 200sb                             | Penta | [4, 1605, 3958, 1754, 4]            |                                                |
