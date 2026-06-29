@@ -29,8 +29,8 @@ The following are the historic elo for Raphael.
   </tr>
   <tr align="center">
     <td>4.1.0     </td> <td>May 17, 2026 </td>
-    <td>3716 (#26)</td> <td>3612         </td>
-    <td>3555 (#22)</td> <td>             </td>
+    <td>3716 (#26)</td> <td>3614 (#20)   </td>
+    <td>3555 (#22)</td> <td>3513 (#18)   </td>
     <td>          </td>
   </tr>
   <tr align="center">
