@@ -22,100 +22,100 @@ The following are the historic elo for Raphael.
     <th><a href="https://www.sp-cc.de">SPCC</a></th>
   </tr>
   <tr align="center">
-    <td>4.2.0     </td> <td>Jun 27, 2026 </td>
-    <td>3740*     </td> <td>3600*        </td>
-    <td>          </td> <td>             </td>
-    <td>3710 (#11)</td>
+    <td>4.2.0        </td> <td>Jun 27, 2026 </td>
+    <td>3740*        </td> <td>3600*        </td>
+    <td>             </td> <td>             </td>
+    <td>3710 (#11)   </td>
   </tr>
   <tr align="center">
-    <td>4.1.0     </td> <td>May 17, 2026 </td>
-    <td>3716 (#26)</td> <td>3614 (#20)   </td>
-    <td>3555 (#22)</td> <td>3513 (#18)   </td>
-    <td>          </td>
+    <td>4.1.0        /td> <td>May 17, 2026 </td>
+    <td>3716 (#26)   </td> <td>3614 (#20)   </td>
+    <td>3555 (#22)   </td> <td>3513 (#18**) </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>4.0.0     </td> <td>Apr 26, 2026 </td>
-    <td>3697*     </td> <td>3606 (#23)   </td>
-    <td>3532 (#31)</td> <td>3487 (#20**) </td>
-    <td>          </td>
+    <td>4.0.0        </td> <td>Apr 26, 2026 </td>
+    <td>3697*        </td> <td>3606 (#23)   </td>
+    <td>3532 (#31)   </td> <td>3487 (#20**) </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>3.3.0</td> <td>Apr 06, 2026</td>
-    <td>3670 </td> <td>3558 </td>
-    <td>3521 </td> <td>     </td>
-    <td>          </td>
+    <td>3.3.0        </td> <td>Apr 06, 2026 </td>
+    <td>3670         </td> <td>3558         </td>
+    <td>3521         </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>3.2.0</td> <td>Mar 19, 2026</td>
-    <td>3612*</td> <td>3484 </td>
-    <td>3433 </td> <td>     </td>
-    <td>          </td>
+    <td>3.2.0        </td> <td>Mar 19, 2026 </td>
+    <td>3612*        </td> <td>3484         </td>
+    <td>3433         </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>3.1.0</td> <td>Mar 01, 2026</td>
-    <td>3510 </td> <td>3416 </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>3.1.0        </td> <td>Mar 01, 2026 </td>
+    <td>3510         </td> <td>3416         </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>3.0.0</td> <td>Feb 12, 2026</td>
-    <td>3252 </td> <td>3206 </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>3.0.0        </td> <td>Feb 12, 2026 </td>
+    <td>3252         </td> <td>3206         </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>2.3.0</td> <td>Jan 25, 2026</td>
-    <td>3146*</td> <td>3061 </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>2.3.0        </td> <td>Jan 25, 2026 </td>
+    <td>3146*        </td> <td>3061         </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>2.2.0</td> <td>Jan 08, 2026</td>
-    <td>3035*</td> <td>2953 </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>2.2.0        </td> <td>Jan 08, 2026 </td>
+    <td>3035*        </td> <td>2953         </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>2.1.0</td> <td>Dec 31, 2025</td>
-    <td>2739*</td> <td>2689 </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>2.1.0        </td> <td>Dec 31, 2025 </td>
+    <td>2739*        </td> <td>2689         </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>2.0.0</td> <td>Dec 23, 2025</td>
-    <td>2646*</td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>2.0.0        </td> <td>Dec 23, 2025 </td>
+    <td>2646*        </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>1.8.0</td> <td>Dec 27, 2024</td>
-    <td>2223*</td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>1.8.0        </td> <td>Dec 27, 2024 </td>
+    <td>2223*        </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>1.7.6</td> <td>Dec 16, 2024</td>
-    <td>1970 </td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>1.7.6        </td> <td>Dec 16, 2024 </td>
+    <td>1970         </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>1.7.0</td> <td>Aug 26, 2023</td>
-    <td>1853 </td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>1.7.0        </td> <td>Aug 26, 2023 </td>
+    <td>1853         </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>1.6.0</td> <td>Aug 20, 2023</td>
-    <td>1797*</td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>1.6.0        </td> <td>Aug 20, 2023 </td>
+    <td>1797*        </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
   <tr align="center">
-    <td>1.5.0</td> <td>Aug 16, 2023</td>
-    <td>1764*</td> <td>     </td>
-    <td>     </td> <td>     </td>
-    <td>          </td>
+    <td>1.5.0        </td> <td>Aug 16, 2023 </td>
+    <td>1764*        </td> <td>             </td>
+    <td>             </td> <td>             </td>
+    <td>             </td>
   </tr>
 </table>
 *estimated<br>
@@ -163,7 +163,7 @@ Follow these steps to build Raphael yourself. Note that it is highly recommended
 ### Graphics User Interface (GUI)
 
 The GUI is a quick and easy way to start engine battles or play against Raphael interactively.
-To start a quick GUI match against yourself and Raphael as follows:
+You can start a quick GUI match against yourself and Raphael as follows:
 
 ```shell
 main.exe
@@ -175,7 +175,7 @@ There are supports for board annotations (arrows and square highlights) using th
 ### Raphael (Engine)
 
 Raphael is a UCI-compliant chess engine.
-To use it in other UCI-compliant softwares, compile `uci.cpp` or download the prebuilt binaries using the [instructions above](#getting-started).
+To use it in other UCI-compliant softwares, compile `uci.cpp` or download the prebuilt binaries from the [Releases](https://github.com/Orbital-Web/Raphael/releases) page.
 To see all supported commands, run `uci.exe help`
 
 <details>
@@ -292,7 +292,7 @@ To see all supported commands, run `uci.exe help`
   - [x] Lazy SMP                            (`v4.0+`)
   - [x] Thread voting                       (`v4.2+`)
   - [x] NUMA thread pinning                 (`v4.2+`)
-  - [ ] Shared corrhist
+  - [x] Shared corrhist                     (`v4.2+`)
   - [ ] NUMA net replication
 - [x] Tuning                                (`v3.3+`)
   - [x] SPSA                                (`v3.3+`)
@@ -309,37 +309,36 @@ The net files can be found on the [Raphael-Net](https://github.com/Orbital-Web/R
 <table>
   <tr>
     <th>Name</th>
-    <th>Type</th>
     <th>Default</th>
     <th>Range</th>
     <th>Description</th>
   </tr>
   <tr>
-    <td>Hash</td> <td>spin</td> <td>64</td> <td>[1, 65536]</td>
+    <td>Hash</td> <td>64</td> <td>[1, 524288]</td>
     <td>Memory allocated for transposition table (in MiB)</td>
   </tr>
   <tr>
-    <td>Threads</td> <td>spin</td> <td>1</td> <td>[1, 1024]</td>
+    <td>Threads</td> <td>1</td> <td>[1, 2048]</td>
     <td>Number of search threads</td>
   </tr>
   <tr>
-    <td>UCI_Chess960</td> <td>check</td> <td>false</td> <td>true/false</td>
+    <td>UCI_Chess960</td> <td>false</td> <td>true/false</td>
     <td>Whether to play Chess960 (frc/dfrc) games</td>
   </tr>
   <tr>
-    <td>MoveOverhead</td> <td>spin</td> <td>10</td> <td>[0, 5000]</td>
+    <td>MoveOverhead</td> <td>10</td> <td>[0, 5000]</td>
     <td>Amount of time assumed to be lost to overhead per move (in ms)</td>
   </tr>
   <tr>
-    <td>Datagen</td> <td>check</td> <td>false</td> <td>true/false</td>
+    <td>Datagen</td> <td>false</td> <td>true/false</td>
     <td>Whether to enable datagen mode (modifies search behavior)</td>
   </tr>
   <tr>
-    <td>Softnodes</td> <td>check</td> <td>false</td> <td>true/false</td>
+    <td>Softnodes</td> <td>false</td> <td>true/false</td>
     <td>Whether to use a soft node limit when sent go nodes</td>
   </tr>
   <tr>
-    <td>SoftNodeHardLimitMultiplier</td> <td>spin</td> <td>1678</td> <td>[1, 5000]</td>
+    <td>SoftNodeHardLimitMultiplier</td> <td>1678</td> <td>[1, 5000]</td>
     <td>Scale factor of hard node limit when using softnodes</td>
   </tr>
 </table>
@@ -353,7 +352,7 @@ Raphael uses or has used the following tools throughout its development:
 - [GediminasMasaitis's Texel Tuner](https://github.com/GediminasMasaitis/texel-tuner) for tuning the HCE parameters for v1.8
 - [OpenBench](https://github.com/AndyGrant/OpenBench) for data generations and distributed SPRTs from v3.1 onwards
 - [bullet](https://github.com/jw1912/bullet) for NNUE training from v3.1 onwards
-- [Pawnocchio](https://github.com/JonathanHallstrom/pawnocchio) for data processing and relabeling from v3.1 onwards
+- [Pawnocchio](https://github.com/JonathanHallstrom/pawnocchio) for data processing from v3.1 onwards
 - [incbin](https://github.com/graphitemaster/incbin) for embedding network files from v3.1 onwards
 
 ## Special Thanks To
