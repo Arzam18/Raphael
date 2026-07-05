@@ -3,9 +3,11 @@
 Raphael is a superhuman UCI Chess Engine built using C++.
 It also comes with a GUI built using [SFML](https://www.sfml-dev.org/).
 
-You can [scroll to the bottom](#raphael-engine) to see a list of features currently implemented, and also download the prebuilt binaries to try out Raphael for yourself.
+You can [scroll to the bottom](#raphael-engine) to download the prebuilt binaries and see the list of currently-implemented features.
 
 Raphael is largely inspired by [Sebastian Lague's Coding Adventure series on implementing a Chess Engine](https://youtu.be/U4ogK0MIzqk).
+
+Raphael uses its own original data for its NNUE and does not contain any LLM-generated code.
 
 ## Elo
 
@@ -19,103 +21,104 @@ The following are the historic elo for Raphael.
     <th><a href="https://www.computerchess.org.uk/ccrl/4040/cgi/compare_engines.cgi?family=Raphael">CCRL 40/15</a></th>
     <th><a href="http://www.cegt.net/40_40%20Rating%20List/40_40%20SingleVersion/rangliste.html">CEGT 40/20</a></th>
     <th><a href="https://ipmanchess.yolasite.com/r9-7945hx.php">Ipman R9</a></th>
-    <th><a href="https://www.sp-cc.de">SPCC</a></th>
+    <th><a href="https://www.sp-cc.de">SPCC Top 15</a></th>
+    <th><a href="https://e4e6.com/324/">Chess324 Top 15</th>
   </tr>
   <tr align="center">
     <td>4.2.0        </td> <td>Jun 27, 2026 </td>
-    <td>3740*        </td> <td>3600*        </td>
+    <td>3740*        </td> <td>3593 (#14)   </td>
     <td>             </td> <td>             </td>
-    <td>3710 (#11)   </td>
+    <td>3710 (#11)   </td> <td>3733 (#11)   </td>
   </tr>
   <tr align="center">
-    <td>4.1.0        /td> <td>May 17, 2026 </td>
+    <td>4.1.0        </td> <td>May 17, 2026 </td>
     <td>3716 (#26)   </td> <td>3614 (#20)   </td>
     <td>3555 (#22)   </td> <td>3513 (#18**) </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>4.0.0        </td> <td>Apr 26, 2026 </td>
     <td>3697*        </td> <td>3606 (#23)   </td>
     <td>3532 (#31)   </td> <td>3487 (#20**) </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>3.3.0        </td> <td>Apr 06, 2026 </td>
     <td>3670         </td> <td>3558         </td>
     <td>3521         </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>3.2.0        </td> <td>Mar 19, 2026 </td>
     <td>3612*        </td> <td>3484         </td>
     <td>3433         </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>3.1.0        </td> <td>Mar 01, 2026 </td>
     <td>3510         </td> <td>3416         </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>3.0.0        </td> <td>Feb 12, 2026 </td>
     <td>3252         </td> <td>3206         </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>2.3.0        </td> <td>Jan 25, 2026 </td>
     <td>3146*        </td> <td>3061         </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>2.2.0        </td> <td>Jan 08, 2026 </td>
     <td>3035*        </td> <td>2953         </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>2.1.0        </td> <td>Dec 31, 2025 </td>
     <td>2739*        </td> <td>2689         </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>2.0.0        </td> <td>Dec 23, 2025 </td>
     <td>2646*        </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>1.8.0        </td> <td>Dec 27, 2024 </td>
     <td>2223*        </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>1.7.6        </td> <td>Dec 16, 2024 </td>
     <td>1970         </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>1.7.0        </td> <td>Aug 26, 2023 </td>
     <td>1853         </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>1.6.0        </td> <td>Aug 20, 2023 </td>
     <td>1797*        </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
   <tr align="center">
     <td>1.5.0        </td> <td>Aug 16, 2023 </td>
     <td>1764*        </td> <td>             </td>
     <td>             </td> <td>             </td>
-    <td>             </td>
+    <td>             </td> <td>             </td>
   </tr>
 </table>
 *estimated<br>
@@ -203,6 +206,7 @@ To see all supported commands, run `uci.exe help`
     - [ ] Noisy history pruning
     - [x] Multi-cut                         (`v3.3+`)
     - [x] Improving heuristics              (`v3.2+`)
+    - [ ] Bad noisy futility pruning
   - [x] Transposition table                 (`v1.1+`)
     - [x] Prefetching                       (`v2.2+`)
     - [x] Aging                             (`v3.0+`)
@@ -230,7 +234,7 @@ To see all supported commands, run `uci.exe help`
     - ~~[x] Killer heuristics~~             (`v1.3+`)
     - [x] Butterfly history                 (`v1.5+`)
     - [x] Capture history                   (`v2.3+`)
-    - [ ] Piece-to history
+    - [x] Pawn history                      (`v4.3+`)
     - [x] Continuation history              (`v3.2+`)
     - [x] Threats in history                (`v3.2+`)
     - [x] SEE                               (`v1.7+`)
@@ -272,9 +276,11 @@ To see all supported commands, run `uci.exe help`
     - [x] Multilayer network                (`v4.1+`)
     - [x] Sparse affine                     (`v4.1+`)
     - [ ] Dual activations
-    - [x] Threat Inputs                     (`v4.2+`)
-    - [ ] Pawn Pair Inputs
+    - [x] Threat inputs                     (`v4.2+`)
+    - [ ] Pawn pair inputs
     - [ ] Relabeling/distillation
+  - [x] Material Scaling                    (`v3.3+`)
+  - [x] Halfmove clock scaling              (`v3.3+`)
 - [x] Time management                       (`v1.0+`)
   - [x] Hard/soft limit                     (`v3.0+`)
   - [x] Node-based scaling                  (`v3.2+`)
