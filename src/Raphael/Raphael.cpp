@@ -400,8 +400,8 @@ i32 Raphael::adjust_score(const ThreadData& tdata, i32 raw_static_eval, i32& cor
 
 void Raphael::iterative_deepen(ThreadData& tdata) {
     const i32 thread_id = tdata.thread_id;
-    auto ss = &tdata.search_stack[2];
-    auto mv = tdata.move_stack;
+    auto* ss = &tdata.search_stack[2];
+    auto* mv = tdata.move_stack;
 
     auto& result = tdata.result;
     result.pv = &ss->pv;
@@ -429,7 +429,7 @@ void Raphael::iterative_deepen(ThreadData& tdata) {
         i32 iterscore;
         while (!stop_.load(memory_order_relaxed)) {
             const i32 asp_fdepth = max(result.depth * DEPTH_SCALE - asp_fred, DEPTH_SCALE);
-            iterscore = negamax<true>(tdata, asp_fdepth, 0, alpha, beta, false, ss, mv);
+            iterscore = negamax<true>(tdata, asp_fdepth, 0, alpha, beta, false, mv);
 
             if (iterscore <= alpha) {
                 beta = (alpha + beta) / 2;
@@ -473,18 +473,12 @@ void Raphael::iterative_deepen(ThreadData& tdata) {
 
 template <bool is_PV>
 i32 Raphael::negamax(
-    ThreadData& tdata,
-    i32 fdepth,
-    const i32 ply,
-    i32 alpha,
-    i32 beta,
-    bool cutnode,
-    SearchStack* ss,
-    MoveStack* mv
+    ThreadData& tdata, i32 fdepth, const i32 ply, i32 alpha, i32 beta, bool cutnode, MoveStack* mv
 ) {
     const i32 thread_id = tdata.thread_id;
     auto& position = tdata.position;
     auto& history = tdata.history;
+    auto* ss = &tdata.search_stack[2 + ply];
     const auto& board = position.board();
 
     const bool is_root = (ply == 0);
@@ -615,9 +609,8 @@ i32 Raphael::negamax(
             fred += min<i32>((ss->static_eval - beta) * NMP_RED_EVAL_MUL, NMP_RED_EVAL_MAX);
 
             const i32 red_fdepth = fdepth - fred;
-            const i32 score = -negamax<false>(
-                tdata, red_fdepth, ply + 1, -beta, -beta + 1, !cutnode, ss + 1, mv
-            );
+            const i32 score
+                = -negamax<false>(tdata, red_fdepth, ply + 1, -beta, -beta + 1, !cutnode, mv);
 
             position.unmake_nullmove();
 
@@ -628,7 +621,7 @@ i32 Raphael::negamax(
                 // verification search (disable nmp for a fraction of the depths)
                 tdata.min_nmp_ply = ply + NMP_VERIF_DEPTH_FACTOR * red_fdepth / (DEPTH_SCALE * 128);
                 const i32 verif_score
-                    = negamax<false>(tdata, red_fdepth, ply, beta - 1, beta, true, ss, mv + 1);
+                    = negamax<false>(tdata, red_fdepth, ply, beta - 1, beta, true, mv + 1);
                 tdata.min_nmp_ply = 0;
 
                 if (verif_score >= beta) return verif_score;
@@ -664,7 +657,6 @@ i32 Raphael::negamax(
                         -pc_beta,
                         -pc_beta + 1,
                         !cutnode,
-                        ss + 1,
                         mv + 1
                     );
 
@@ -748,7 +740,7 @@ i32 Raphael::negamax(
 
                 ss->excluded = move;
                 const i32 score
-                    = negamax<false>(tdata, s_fdepth, ply, s_beta - 1, s_beta, cutnode, ss, mv + 1);
+                    = negamax<false>(tdata, s_fdepth, ply, s_beta - 1, s_beta, cutnode, mv + 1);
                 ss->excluded = chess::Move::NO_MOVE;
 
                 if (score < s_beta) {
@@ -798,9 +790,7 @@ i32 Raphael::negamax(
 
             ss->freductions = fred;
             const i32 red_fdepth = min(max(new_fdepth - fred, DEPTH_SCALE), new_fdepth);
-            score = -negamax<false>(
-                tdata, red_fdepth, ply + 1, -alpha - 1, -alpha, true, ss + 1, mv + 1
-            );
+            score = -negamax<false>(tdata, red_fdepth, ply + 1, -alpha - 1, -alpha, true, mv + 1);
             ss->freductions = 0;
 
             if (score > alpha && red_fdepth < new_fdepth) {
@@ -813,18 +803,16 @@ i32 Raphael::negamax(
                 new_fdepth -= do_shallower * DO_SHALLOWER_RED;
 
                 score = -negamax<false>(
-                    tdata, new_fdepth, ply + 1, -alpha - 1, -alpha, !cutnode, ss + 1, mv + 1
+                    tdata, new_fdepth, ply + 1, -alpha - 1, -alpha, !cutnode, mv + 1
                 );
             }
         } else if (!is_PV || move_searched > 1)
-            score = -negamax<false>(
-                tdata, new_fdepth, ply + 1, -alpha - 1, -alpha, !cutnode, ss + 1, mv + 1
-            );
+            score
+                = -negamax<false>(tdata, new_fdepth, ply + 1, -alpha - 1, -alpha, !cutnode, mv + 1);
 
         assert(!(is_PV && move_searched != 1 && score == INT32_MIN));
         if (is_PV && (move_searched == 1 || score > alpha))
-            score
-                = -negamax<true>(tdata, new_fdepth, ply + 1, -beta, -alpha, false, ss + 1, mv + 1);
+            score = -negamax<true>(tdata, new_fdepth, ply + 1, -beta, -alpha, false, mv + 1);
         assert(score != INT32_MIN);
 
         position.unmake_move();

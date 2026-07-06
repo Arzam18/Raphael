@@ -258,7 +258,6 @@ private:
      * \param alpha lower bound score of current position
      * \param beta upper bound score of current position
      * \param cutnode whether the current position is a cutnode
-     * \param ss search stack at current ply
      * \param mv move stack at current node
      * \returns score of current position
      */
@@ -270,7 +269,6 @@ private:
         i32 alpha,
         i32 beta,
         bool cutnode,
-        SearchStack* ss,
         MoveStack* mv
     );
 
