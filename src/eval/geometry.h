@@ -27,7 +27,7 @@ struct Vector {
      * \param src data source, 8*64 bits
      * \returns the loaded Vector
      */
-    static Vector load(const void* src);
+    [[nodiscard]] static Vector load(const void* src);
 
     /** Stores a Vector
      *
@@ -39,14 +39,14 @@ struct Vector {
      *
      * \returns the rotated vector
      */
-    Vector flip() const;
+    [[nodiscard]] Vector flip() const;
 
 #if defined(USE_AVX2)
     /** Returns a mask of locations where _mm256_cmpeq_epi8 returns true for each byte
      *
      * \returns the mask of set bytes
      */
-    BitRays to_mask() const;
+    [[nodiscard]] BitRays to_mask() const;
 #endif
 };
 
@@ -68,7 +68,7 @@ struct Permutation {
  * \param the bitray to fill
  * \returns filled bitray
  */
-BitRays ray_fill(BitRays br);
+[[nodiscard]] BitRays ray_fill(BitRays br);
 
 /** Returns closest pieces the given piece can attack along each direction
  *
@@ -76,7 +76,7 @@ BitRays ray_fill(BitRays br);
  * \param closest closest occupied squares along each direction
  * \returns closest victims
  */
-BitRays outgoing_threats(chess::Piece piece, BitRays closest);
+[[nodiscard]] BitRays outgoing_threats(chess::Piece piece, BitRays closest);
 
 /** Returns closest pieces that are attacking us for each direction
  *
@@ -84,7 +84,7 @@ BitRays outgoing_threats(chess::Piece piece, BitRays closest);
  * \param closest closest occupied squares along each direction
  * \returns closest attackers
  */
-BitRays incoming_attackers(const Vector& bits, BitRays closest);
+[[nodiscard]] BitRays incoming_attackers(const Vector& bits, BitRays closest);
 
 /** Return closest sliders that are attacking us for each direction
  *
@@ -92,21 +92,21 @@ BitRays incoming_attackers(const Vector& bits, BitRays closest);
  * \param closest closest occupied squares along each direction
  * \returns closest attacking sliders
  */
-BitRays incoming_sliders(const Vector& bits, BitRays closest);
+[[nodiscard]] BitRays incoming_sliders(const Vector& bits, BitRays closest);
 
 /** Compute nearest occupied squares along each ray direction
  *
  * \param bits mailbox byteboard
  * \returns closest occupied squares along each direction
  */
-BitRays closest_occupied(const Vector& bits);
+[[nodiscard]] BitRays closest_occupied(const Vector& bits);
 
 /** Returns the permutation for rays from a focus square
  *
  * \param focus square to generate rays from
  * \returns the corresponding permutation
  */
-Permutation permutation_for(chess::Square focus);
+[[nodiscard]] Permutation permutation_for(chess::Square focus);
 
 /** Permutes a mailbox into ray space
  *
@@ -114,7 +114,9 @@ Permutation permutation_for(chess::Square focus);
  * \param masked_mailbox mailbox byteboard
  * \returns the piece types and piece bits permuted into ray space
  */
-std::pair<Vector, Vector> permute_mailbox(const Permutation& perm, const Vector& masked_mailbox);
+[[nodiscard]] std::pair<Vector, Vector> permute_mailbox(
+    const Permutation& perm, const Vector& masked_mailbox
+);
 
 /** Permutes a mailbox into ray space
  *
@@ -122,7 +124,7 @@ std::pair<Vector, Vector> permute_mailbox(const Permutation& perm, const Vector&
  * \param mailbox board mailbox
  * \returns the piece types and piece bits permuted into ray space
  */
-std::pair<Vector, Vector> permute_mailbox(
+[[nodiscard]] std::pair<Vector, Vector> permute_mailbox(
     const Permutation& perm, std::span<const chess::Piece, 64> mailbox
 );
 
@@ -133,7 +135,7 @@ std::pair<Vector, Vector> permute_mailbox(
  * \param ignore square to ignore
  * \returns the piece types and piece bits permuted into ray space
  */
-std::pair<Vector, Vector> permute_mailbox(
+[[nodiscard]] std::pair<Vector, Vector> permute_mailbox(
     const Permutation& perm, std::span<const chess::Piece, 64> mailbox, chess::Square ignore
 );
 }  // namespace raphael::nnue::geometry

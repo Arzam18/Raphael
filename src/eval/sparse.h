@@ -50,14 +50,14 @@ public:
      *
      * \returns the nnz count
      */
-    i32 count() const;
+    [[nodiscard]] i32 count() const;
 
     /** Returns the tile id for a nonzero block
      *
      * \param nnz_id which nonzero chunk we want the index for
      * \returns the corresponding tile id
      */
-    i32 index(i32 nnz_id) const;
+    [[nodiscard]] i32 index(i32 nnz_id) const;
 #endif
 };
 }  // namespace raphael::nnue

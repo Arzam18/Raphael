@@ -55,7 +55,7 @@ public:
      *
      * \returns current board
      */
-    const chess::Board& board() const { return current_; }
+    [[nodiscard]] const chess::Board& board() const { return current_; }
 
 
     /** Returns a move n plies ago, or NO_MOVE, Piece::NONE if ply > number of moves played
@@ -63,7 +63,7 @@ public:
      * \param ply number of plies to go back
      * \returns the move and moved piece
      */
-    const chess::PieceMove prev_move(i32 ply) const {
+    [[nodiscard]] const chess::PieceMove prev_move(i32 ply) const {
         assert(ply > 0);
         if (ply > (i32)moves_.size())
             return {.move = chess::Move::NO_MOVE, .moving = chess::Piece::NONE};
@@ -77,7 +77,7 @@ public:
      * \param ply distance from root
      * \returns whether the position is in repetition
      */
-    bool is_repetition(i32 ply) const {
+    [[nodiscard]] bool is_repetition(i32 ply) const {
         const i32 size = boards_.size();
         const i32 end = std::max(0, size - current_.halfmoves() - 1);
 
@@ -95,7 +95,7 @@ public:
      * \param ply distance from root
      * \returns whether the position is drawn
      */
-    bool is_drawn(i32 ply) const {
+    [[nodiscard]] bool is_drawn(i32 ply) const {
         if (current_.is_halfmovedraw()) {
             if (!current_.in_check()) return true;
 
@@ -115,7 +115,7 @@ public:
      * \param ply distance from root
      * \returns whether there is an upcoming repetition
      */
-    bool has_upcoming_repetition(i32 ply) const {
+    [[nodiscard]] bool has_upcoming_repetition(i32 ply) const {
         // https://web.archive.org/web/20201107002606/https://marcelk.net/2013-04-06/paper/upcoming-rep-v2.pdf
         const i32 size = boards_.size();
         const i32 end = std::min(current_.halfmoves(), size);
@@ -161,7 +161,7 @@ public:
      *
      * \returns the NNUE evaluation of the board in centipawns
      */
-    i32 evaluate()
+    [[nodiscard]] i32 evaluate()
         requires(include_net)
     {
         return net_.evaluate(current_);

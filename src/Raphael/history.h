@@ -7,7 +7,7 @@ namespace raphael {
 struct HistoryEntry {
     i16 value = 0;
 
-    operator i32() const;
+    [[nodiscard]] operator i32() const;
 
     /** Updates the entry with gravity
      *
@@ -45,7 +45,7 @@ public:
      * \param max_bonus max bonus
      * \returns the history bonus
      */
-    i32 bonus(i32 fdepth, i32 depth_mul, i32 base_bonus, i32 max_bonus) const;
+    [[nodiscard]] i32 bonus(i32 fdepth, i32 depth_mul, i32 base_bonus, i32 max_bonus) const;
 
 
     /** Applies a bonus to the quiet history score
@@ -71,7 +71,7 @@ public:
      * \param position current position
      * \returns continuation history score
      */
-    i32 get_conthist(chess::Move move, const Position<true>& position) const;
+    [[nodiscard]] i32 get_conthist(chess::Move move, const Position<true>& position) const;
 
     /** Returns the quiet history score
      *
@@ -79,7 +79,7 @@ public:
      * \param position current position
      * \returns quiet history score
      */
-    i32 get_quietscore(chess::Move move, const Position<true>& position) const;
+    [[nodiscard]] i32 get_quietscore(chess::Move move, const Position<true>& position) const;
 
     /** Returns the noisy history score
      *
@@ -87,7 +87,7 @@ public:
      * \param captured the captured piece
      * \returns noisy history score
      */
-    i32 get_noisyscore(chess::Move move, chess::Piece captured) const;
+    [[nodiscard]] i32 get_noisyscore(chess::Move move, chess::Piece captured) const;
 
 
     /** Zeros out all the histories */
@@ -100,8 +100,10 @@ private:
      * \param threats squares attacked by the current not side to move
      * \returns butterfly history entry
      */
-    const HistoryEntry& butterfly_entry(chess::Move move, chess::BitBoard threats) const;
-    HistoryEntry& butterfly_entry(chess::Move move, chess::BitBoard threats);
+    [[nodiscard]] const HistoryEntry& butterfly_entry(
+        chess::Move move, chess::BitBoard threats
+    ) const;
+    [[nodiscard]] HistoryEntry& butterfly_entry(chess::Move move, chess::BitBoard threats);
 
     /** Returns a reference to the pawn history entry
      *
@@ -110,8 +112,10 @@ private:
      * \param moving current moving piece
      * \returns pawn history entry
      */
-    const HistoryEntry& pawn_entry(u64 pawn_key, chess::Move move, chess::Piece moving) const;
-    HistoryEntry& pawn_entry(u64 pawn_key, chess::Move move, chess::Piece moving);
+    [[nodiscard]] const HistoryEntry& pawn_entry(
+        u64 pawn_key, chess::Move move, chess::Piece moving
+    ) const;
+    [[nodiscard]] HistoryEntry& pawn_entry(u64 pawn_key, chess::Move move, chess::Piece moving);
 
     /** Returns a reference to the continuation history entry
      *
@@ -120,10 +124,12 @@ private:
      * \param prev_move previous move and moving piece
      * \returns continuation history entry
      */
-    const HistoryEntry& cont_entry(
+    [[nodiscard]] const HistoryEntry& cont_entry(
         chess::Move move, chess::Piece moving, chess::PieceMove prev_move
     ) const;
-    HistoryEntry& cont_entry(chess::Move move, chess::Piece moving, chess::PieceMove prev_move);
+    [[nodiscard]] HistoryEntry& cont_entry(
+        chess::Move move, chess::Piece moving, chess::PieceMove prev_move
+    );
 
     /** Returns a reference to the capture history entry
      *
@@ -131,7 +137,7 @@ private:
      * \param captured the captured piece
      * \returns capture history entry
      */
-    const HistoryEntry& capt_entry(chess::Move move, chess::Piece captured) const;
-    HistoryEntry& capt_entry(chess::Move move, chess::Piece captured);
+    [[nodiscard]] const HistoryEntry& capt_entry(chess::Move move, chess::Piece captured) const;
+    [[nodiscard]] HistoryEntry& capt_entry(chess::Move move, chess::Piece captured);
 };
 }  // namespace raphael

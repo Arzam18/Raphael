@@ -56,14 +56,16 @@ inline std::span<const cpu_set_t> thread_mapping() {
  *
  * \returns number of NUMA nodes
  */
-inline i32 node_count() { return static_cast<i32>(thread_mapping().size()); }
+[[nodiscard]] inline i32 node_count() { return static_cast<i32>(thread_mapping().size()); }
 
 /** Returns the corresponding NUMA node
  *
  * \param thread_id thread to get NUMA node for
  * \returns corresponding NUMA node
  */
-inline i32 get_node(i32 thread_id) { return static_cast<i32>(thread_id % node_count()); }
+[[nodiscard]] inline i32 get_node(i32 thread_id) {
+    return static_cast<i32>(thread_id % node_count());
+}
 
 /** Binds a thread to the corresponding NUMA node
  *
@@ -84,10 +86,10 @@ inline void init() {
 
 #else
 /** Returns 1 as we assume there is only one NUMA node */
-inline i32 node_count() { return 1; }
+[[nodiscard]] inline i32 node_count() { return 1; }
 
 /** Returns 0 as we assume there is only one NUMA node */
-inline i32 get_node(i32) { return 0; }
+[[nodiscard]] inline i32 get_node(i32) { return 0; }
 
 /** Does nothing as libnuma isn't linked */
 inline void bind_thread(i32) {}

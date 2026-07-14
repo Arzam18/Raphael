@@ -5,9 +5,11 @@
 
 namespace raphael::see {
 namespace internal {
-i32 pieceval(chess::Square sq, const chess::Board& board) { return SEE_TABLE[board.at(sq)]; }
+[[nodiscard]] i32 pieceval(chess::Square sq, const chess::Board& board) {
+    return SEE_TABLE[board.at(sq)];
+}
 
-chess::Square lva(chess::BitBoard attackers, const chess::Board& board) {
+[[nodiscard]] chess::Square lva(chess::BitBoard attackers, const chess::Board& board) {
     for (chess::PieceType pt = chess::PieceType::PAWN; pt <= chess::PieceType::KING; ++pt) {
         const auto attacker_of_type = attackers & board.occ(pt);
         if (attacker_of_type) return static_cast<chess::Square>(attacker_of_type.lsb());

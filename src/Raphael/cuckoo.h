@@ -11,8 +11,8 @@ public:
     chess::Move moves[8192] = {};
 
     // hash functions into cuckoo tables
-    constexpr u32 h1(u64 key) { return static_cast<u32>(key & 0x1FFF); }
-    constexpr u32 h2(u64 key) { return static_cast<u32>((key >> 16) & 0x1FFF); }
+    [[nodiscard]] constexpr u32 h1(u64 key) { return static_cast<u32>(key & 0x1FFF); }
+    [[nodiscard]] constexpr u32 h2(u64 key) { return static_cast<u32>((key >> 16) & 0x1FFF); }
 
     /** Initializes the cuckoo tables */
     Cuckoo();

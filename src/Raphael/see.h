@@ -11,5 +11,5 @@ namespace raphael::see {
  * \param threshold minimum evaluation to count as good
  * \returns whether the move's see score is greater than or equal to the threshold
  */
-bool gte(chess::Move move, const chess::Board& board, i32 threshold);
+[[nodiscard]] bool gte(chess::Move move, const chess::Board& board, i32 threshold);
 }  // namespace raphael::see

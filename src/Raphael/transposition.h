@@ -23,9 +23,9 @@ public:
         u8 age_pv_flag;   // 5 bits age, 1 bit pv, 2 bits flag
         u8 pad;           // find a use, I guess
 
-        u32 age() const;
-        bool pv() const;
-        Flag flag() const;
+        [[nodiscard]] u32 age() const;
+        [[nodiscard]] bool pv() const;
+        [[nodiscard]] Flag flag() const;
 
         /** Sets the age and flag of the entry
          *
@@ -40,7 +40,7 @@ public:
          * \param tt_age age of the tt
          * \returns value of this entry
          */
-        i32 value(u32 tt_age) const;
+        [[nodiscard]] i32 value(u32 tt_age) const;
     };
     static_assert(sizeof(Entry) == 12);
 
@@ -98,7 +98,7 @@ public:
      * \param ply current distance from root
      * \returns whether there was a tt hit or not
      */
-    bool get(ProbedEntry& ttentry, u64 key, i32 ply) const;
+    [[nodiscard]] bool get(ProbedEntry& ttentry, u64 key, i32 ply) const;
 
     /** Prefetches a table entry
      *
@@ -134,7 +134,7 @@ public:
      * \param static_eval variable to put static eval into
      * \returns whether the static eval for this key was found
      */
-    bool get_static_eval(u64 key, i32& static_eval) const;
+    [[nodiscard]] bool get_static_eval(u64 key, i32& static_eval) const;
 
     /**  Stores the static eval for a given key
      *
@@ -153,7 +153,7 @@ public:
     void do_age();
 
     /** Returns how full the table is */
-    i32 hashfull() const;
+    [[nodiscard]] i32 hashfull() const;
 
 private:
     /** Computes the index on the table
@@ -161,7 +161,7 @@ private:
      * \param key the key to use
      * \returns the index of the key in the table
      */
-    u64 index(u64 key) const;
+    [[nodiscard]] u64 index(u64 key) const;
 
     /** Allocates the table and sets capacity_ and table_ (not size)
      *

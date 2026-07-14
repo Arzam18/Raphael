@@ -57,7 +57,7 @@ public:
      * \param board current board (should match either set_board or new_board in make_move)
      * \returns the HCE evaluation of the board in centipawns
      */
-    i32 evaluate(const chess::Board& board);
+    [[nodiscard]] i32 evaluate(const chess::Board& board);
 
     /** Sets internal states to match the given board
      *

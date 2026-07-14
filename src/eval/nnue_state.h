@@ -35,7 +35,7 @@ public:
      * \param current board (should match the top board state)
      * \returns the updated top accumulator
      */
-    const NnueAccumulator& get_top_accumulator(const chess::Board& board);
+    [[nodiscard]] const NnueAccumulator& get_top_accumulator(const chess::Board& board);
 
     /** Sets internal states to match the given board
      *
@@ -113,7 +113,7 @@ private:
      * \param king_sq king square for this perspective
      * \returns whether features should be horizontally mirrored
      */
-    static bool needs_mirroring(chess::Square king_sq);
+    [[nodiscard]] static bool needs_mirroring(chess::Square king_sq);
 
     /** Returns the king bucket index
      *
@@ -121,7 +121,7 @@ private:
      * \param perspective perspective
      * \returns input bucket index
      */
-    static i32 king_bucket(chess::Square king_sq, chess::Color perspective);
+    [[nodiscard]] static i32 king_bucket(chess::Square king_sq, chess::Color perspective);
 
     /** Adds ti updates for a piece additional/removal from a square
      *

@@ -70,7 +70,7 @@ private:
      * \param color color
      * \returns occupancy bitboard
      */
-    chess::BitBoard occ(chess::PieceType pt, chess::Color color) const;
+    [[nodiscard]] chess::BitBoard occ(chess::PieceType pt, chess::Color color) const;
 };
 
 
@@ -101,7 +101,7 @@ public:
      * \param perspective which accumulator to check
      * \returns the psq state of the stm accumulator
      */
-    AccState get_psq_state(chess::Color perspective) const;
+    [[nodiscard]] AccState get_psq_state(chess::Color perspective) const;
 
     /** Sets the stm psq accumulator state
      *
@@ -115,7 +115,7 @@ public:
      * \param perspective which accumulator to check
      * \returns the ti state of the stm accumulator
      */
-    AccState get_ti_state(chess::Color perspective) const;
+    [[nodiscard]] AccState get_ti_state(chess::Color perspective) const;
 
     /** Sets the stm ti accumulator state
      *

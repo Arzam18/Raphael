@@ -12,14 +12,14 @@ using std::round;
 
 namespace raphael::wdl {
 namespace internal {
-f64 wdl_a(i32 material) {
+[[nodiscard]] f64 wdl_a(i32 material) {
     static constexpr f64 as[] = {-56.68614451, 147.07269963, -183.22284031, 240.87662059};
 
     const auto m = static_cast<f64>(clamp(material, 17, 78)) / 58.0;
     return ((as[0] * m + as[1]) * m + as[2]) * m + as[3];
 }
 
-f64 wdl_b(i32 material) {
+[[nodiscard]] f64 wdl_b(i32 material) {
     static constexpr f64 bs[] = {11.58191170, -9.61969055, 5.92615161, 28.93615867};
 
     const auto m = static_cast<f64>(clamp(material, 17, 78)) / 58.0;

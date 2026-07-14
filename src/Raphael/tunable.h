@@ -46,19 +46,19 @@ struct SpinOption {
         value = val;
         if (callback) callback();
     }
-    operator i32() const { return value; }
+    [[nodiscard]] operator i32() const { return value; }
 
     /** Returns the step size (i.e., C_end in OB)
      *
      * \returns step size
      */
-    f32 step_size() const { return f32(max_val - min_val) / 20; }
+    [[nodiscard]] f32 step_size() const { return f32(max_val - min_val) / 20; }
 
     /** Returns the learning rate (i.e., R_end in OB)
      *
      * \returns learning rate
      */
-    f32 learning_rate() const { return 0.002 / (std::min(0.5f, step_size()) / 0.5); }
+    [[nodiscard]] f32 learning_rate() const { return 0.002 / (std::min(0.5f, step_size()) / 0.5); }
 
 
     /** Sets a callback for the option
@@ -72,7 +72,7 @@ struct SpinOption {
      *
      * \returns stringified option info
      */
-    std::string uci() const {
+    [[nodiscard]] std::string uci() const {
         return "option name " + name + " type spin default " + std::to_string(def) + " min "
                + std::to_string(min_val) + " max " + std::to_string(max_val) + "\n";
     }
@@ -81,7 +81,7 @@ struct SpinOption {
      *
      * \returns stringified option tuning info
      */
-    std::string ob() const {
+    [[nodiscard]] std::string ob() const {
         return name + ", int, " + std::to_string(def) + ", " + std::to_string(min_val) + ", "
                + std::to_string(max_val) + ", " + std::to_string(step_size()) + ", "
                + std::to_string(learning_rate()) + "\n";
@@ -105,13 +105,13 @@ struct CheckOption {
      * \param val value to set to
      */
     void set(bool val) { value = val; }
-    operator bool() const { return value; }
+    [[nodiscard]] operator bool() const { return value; }
 
     /** Returns the UCI option info string
      *
      * \returns stringified option info
      */
-    std::string uci() const {
+    [[nodiscard]] std::string uci() const {
         return "option name " + name + " type check default " + ((def) ? "true" : "false") + "\n";
     }
 };
@@ -128,7 +128,7 @@ inline std::vector<SpinOption<true>*> tunables;
  * \param value value to set to
  * \returns whether a parameter value was set or not
  */
-inline bool set_tunable(const std::string& name, i32 value) {
+[[nodiscard]] inline bool set_tunable(const std::string& name, i32 value) {
     for (const auto& tunable : tunables) {
         if (utils::is_case_insensitive_equals(tunable->name, name)) {
             // assume value is valid

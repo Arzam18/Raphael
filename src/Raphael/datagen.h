@@ -31,7 +31,7 @@ struct PackedBoard {
      * \param score score to record
      * \returns the packed board
      */
-    static PackedBoard pack(const chess::Board& board, i16 score);
+    [[nodiscard]] static PackedBoard pack(const chess::Board& board, i16 score);
 };
 static_assert(sizeof(PackedBoard) == 32);
 
@@ -45,7 +45,7 @@ struct ViriMove {
      * \param score score to record
      * \returns the packed viriformat move
      */
-    static ViriMove from_move(chess::Move move, i32 score);
+    [[nodiscard]] static ViriMove from_move(chess::Move move, i32 score);
 };
 static_assert(sizeof(ViriMove) == 4);
 

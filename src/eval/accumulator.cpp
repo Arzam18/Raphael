@@ -22,7 +22,7 @@ static constexpr i32 PIECE_TARGET_MAP[6][6] = {
 
 static constexpr i32 PIECE_TARGET_COUNT[6] = {6, 10, 8, 8, 10, 0};  // num included * 2 colors
 
-static constexpr auto compute_piece_indices(chess::Piece piece) {
+[[nodiscard]] static constexpr auto compute_piece_indices(chess::Piece piece) {
     // idx[from][to] = number of squares attacked by piece whose square index is less than to square
     MultiArray<u8, 64, 64> idx{};
 

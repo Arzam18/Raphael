@@ -9,7 +9,7 @@ namespace raphael {
 struct CorrectionEntry {
     i16 value = 0;
 
-    operator i32() const;
+    [[nodiscard]] operator i32() const;
 
     /** Updates the corrhist entry with gravity
      *
@@ -21,7 +21,7 @@ struct CorrectionEntry {
 struct SharedCorrectionEntry {
     std::atomic<i16> value = 0;
 
-    operator i32() const;
+    [[nodiscard]] operator i32() const;
 
     /** Updates the shared corrhist entry with gravity
      *
@@ -52,16 +52,16 @@ public:
      * \param board current board
      * \returns pawn corrhist entry
      */
-    const SharedCorrectionEntry& pawn_corr_entry(const chess::Board& board) const;
-    SharedCorrectionEntry& pawn_corr_entry(const chess::Board& board);
+    [[nodiscard]] const SharedCorrectionEntry& pawn_corr_entry(const chess::Board& board) const;
+    [[nodiscard]] SharedCorrectionEntry& pawn_corr_entry(const chess::Board& board);
 
     /** Returns a reference to the major corrhist entry
      *
      * \param board current board
      * \returns major corrhist entry
      */
-    const SharedCorrectionEntry& major_corr_entry(const chess::Board& board) const;
-    SharedCorrectionEntry& major_corr_entry(const chess::Board& board);
+    [[nodiscard]] const SharedCorrectionEntry& major_corr_entry(const chess::Board& board) const;
+    [[nodiscard]] SharedCorrectionEntry& major_corr_entry(const chess::Board& board);
 
     /** Returns a reference to the non-pawn corrhist entry
      *
@@ -69,10 +69,12 @@ public:
      * \param color color of non-pawns
      * \returns non-pawn corrhist entry
      */
-    const SharedCorrectionEntry& nonpawn_corr_entry(
+    [[nodiscard]] const SharedCorrectionEntry& nonpawn_corr_entry(
         const chess::Board& board, chess::Color color
     ) const;
-    SharedCorrectionEntry& nonpawn_corr_entry(const chess::Board& board, chess::Color color);
+    [[nodiscard]] SharedCorrectionEntry& nonpawn_corr_entry(
+        const chess::Board& board, chess::Color color
+    );
 };
 
 class CorrectionHistory {
@@ -94,10 +96,10 @@ public:
      * \param prev_move previous move and moving piece
      * \returns continuation history entry
      */
-    const CorrectionEntry& cont_corr_entry(
+    [[nodiscard]] const CorrectionEntry& cont_corr_entry(
         chess::Move move, chess::Piece moving, chess::PieceMove prev_move
     ) const;
-    CorrectionEntry& cont_corr_entry(
+    [[nodiscard]] CorrectionEntry& cont_corr_entry(
         chess::Move move, chess::Piece moving, chess::PieceMove prev_move
     );
 };
@@ -130,7 +132,7 @@ void update(
  * \param shared_corrhist this NUMA node's correction history
  * \returns the correction term
  */
-i32 get(
+[[nodiscard]] i32 get(
     const Position<true>& position,
     const CorrectionHistory* thread_corrhist,
     const SharedCorrectionHistory* shared_corrhist

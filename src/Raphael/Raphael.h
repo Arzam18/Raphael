@@ -182,7 +182,7 @@ public:
      *
      * \returns whether the search completed
      */
-    bool is_search_complete();
+    [[nodiscard]] bool is_search_complete();
 
     /** Blocks until the current search finishes and returns its search result.
      * The search result is only valid if start_search has been called previously.
@@ -208,7 +208,7 @@ public:
      * \param corrected whether to return the corrected or raw static eval
      * \returns the static eval
      */
-    i32 static_eval(bool corrected);
+    [[nodiscard]] i32 static_eval(bool corrected);
 
 
     /** Resets Raphael */
@@ -240,7 +240,9 @@ private:
      * \param corrplexity reference to store abs correction into
      * \returns the adjusted eval
      */
-    i32 adjust_score(const ThreadData& tdata, i32 raw_static_eval, i32& corrplexity) const;
+    [[nodiscard]] i32 adjust_score(
+        const ThreadData& tdata, i32 raw_static_eval, i32& corrplexity
+    ) const;
 
 
     /** Does the actual search logic, calling negamax with increasing depth.
@@ -264,7 +266,7 @@ private:
      * \returns score of current position
      */
     template <bool is_PV>
-    i32 negamax(
+    [[nodiscard]] i32 negamax(
         ThreadData& tdata,
         i32 fdepth,
         const i32 ply,
@@ -285,6 +287,8 @@ private:
      * \returns score of current board
      */
     template <bool is_PV>
-    i32 quiescence(ThreadData& tdata, const i32 ply, i32 alpha, i32 beta, MoveStack* mv);
+    [[nodiscard]] i32 quiescence(
+        ThreadData& tdata, const i32 ply, i32 alpha, i32 beta, MoveStack* mv
+    );
 };
 }  // namespace raphael

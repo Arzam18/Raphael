@@ -25,7 +25,7 @@ private:
      *
      * \returns the pointer to the loaded network
      */
-    static const NnueParams* load_network();
+    [[nodiscard]] static const NnueParams* load_network();
 
     NnueState state_;
 
@@ -38,13 +38,13 @@ public:
      * \param board current board (should match the top board state)
      * \returns the NNUE evaluation of the board in centipawns
      */
-    i32 evaluate(const chess::Board& board);
+    [[nodiscard]] i32 evaluate(const chess::Board& board);
 
     /** Returns the NnueState object to pass into the board for makemove handling
      *
      * \returns this board's state_
      */
-    NnueState& observer();
+    [[nodiscard]] NnueState& observer();
 
 #ifdef MEASURE_SPARSITY
     /** Saves the number of times each ft neuron fired to a file and returns the average number of

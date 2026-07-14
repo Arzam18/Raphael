@@ -21,28 +21,28 @@ using VecI32 = __m512i;  // a list of 16x i32
  * \param src an array of 64x u8 elements
  * \returns the loaded register
  */
-inline VecU8 load_u8(const u8* src) { return _mm512_load_si512(src); }
+[[nodiscard]] inline VecU8 load_u8(const u8* src) { return _mm512_load_si512(src); }
 
 /** Loads an i8[64] array into a VecI8 register
  *
  * \param src an array of 64x i8 elements
  * \returns the loaded register
  */
-inline VecI8 load_i8(const i8* src) { return _mm512_load_si512(src); }
+[[nodiscard]] inline VecI8 load_i8(const i8* src) { return _mm512_load_si512(src); }
 
 /** Loads an i16[32] array into a VecI16 register
  *
  * \param src an array of 32x i16 elements
  * \returns the loaded register
  */
-inline VecI16 load_i16(const i16* src) { return _mm512_load_si512(src); }
+[[nodiscard]] inline VecI16 load_i16(const i16* src) { return _mm512_load_si512(src); }
 
 /** Loads an i32[16] array into a VecI32 register
  *
  * \param src an array of 16x i32 elements
  * \returns the loaded register
  */
-inline VecI32 load_i32(const i32* src) { return _mm512_load_si512(src); }
+[[nodiscard]] inline VecI32 load_i32(const i32* src) { return _mm512_load_si512(src); }
 
 /** Stores a VecU8 register into a u8[64] array
  *
@@ -69,27 +69,27 @@ inline void store_i32(i32* dst, VecI32 src) { _mm512_store_si512(dst, src); }
  *
  * \returns an all zero register
  */
-inline VecI16 zero_i16() { return _mm512_setzero_si512(); }
+[[nodiscard]] inline VecI16 zero_i16() { return _mm512_setzero_si512(); }
 
 /** Returns a VecI32 register with all zeros
  *
  * \returns an all zero register
  */
-inline VecI32 zero_i32() { return _mm512_setzero_si512(); }
+[[nodiscard]] inline VecI32 zero_i32() { return _mm512_setzero_si512(); }
 
 /** Returns a VecI16 register with all values set to val
  *
  * \param val the value to set to
  * \returns an all val register
  */
-inline VecI16 full_i16(i16 val) { return _mm512_set1_epi16(val); }
+[[nodiscard]] inline VecI16 full_i16(i16 val) { return _mm512_set1_epi16(val); }
 
 /** Returns a VecI32 register with all values set to val
  *
  * \param val the value to set to
  * \returns an all val register
  */
-inline VecI32 full_i32(i32 val) { return _mm512_set1_epi32(val); }
+[[nodiscard]] inline VecI32 full_i32(i32 val) { return _mm512_set1_epi32(val); }
 
 /** Does an element-wise addition of two VecI16 registers
  *
@@ -97,7 +97,7 @@ inline VecI32 full_i32(i32 val) { return _mm512_set1_epi32(val); }
  * \param b register 2
  * \returns the result of the addition
  */
-inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm512_add_epi16(a, b); }
+[[nodiscard]] inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm512_add_epi16(a, b); }
 
 /** Does an element-wise addition of two VecI32 registers
  *
@@ -105,7 +105,7 @@ inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm512_add_epi16(a, b); }
  * \param b register 2
  * \returns the result of the addition
  */
-inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm512_add_epi32(a, b); }
+[[nodiscard]] inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm512_add_epi32(a, b); }
 
 /** Does an element-wise subtraction of two VecI16 registers
  *
@@ -113,7 +113,7 @@ inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm512_add_epi32(a, b); }
  * \param b register 2
  * \returns the result of the subtraction
  */
-inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm512_sub_epi16(a, b); }
+[[nodiscard]] inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm512_sub_epi16(a, b); }
 
 /** Does an element-wise product of two VecI32 registers and keeps the low 32 bits
  *
@@ -121,7 +121,7 @@ inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm512_sub_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm512_mullo_epi32(a, b); }
+[[nodiscard]] inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm512_mullo_epi32(a, b); }
 
 /** Does an element-wise product of two VecI16 registers and keeps the low 16 bits
  *
@@ -129,7 +129,7 @@ inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm512_mullo_epi32(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm512_mullo_epi16(a, b); }
+[[nodiscard]] inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm512_mullo_epi16(a, b); }
 
 /** Does an element-wise product of two VecI16 registers and keeps the high 16 bits
  *
@@ -137,7 +137,7 @@ inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm512_mullo_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm512_mulhi_epi16(a, b); }
+[[nodiscard]] inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm512_mulhi_epi16(a, b); }
 
 /** Does an element-wise multiplication of two VecI16 registers and horizontally adds the results,
  * creating a VecI32 result.
@@ -146,7 +146,7 @@ inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm512_mulhi_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication-addition
  */
-inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm512_madd_epi16(a, b); }
+[[nodiscard]] inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm512_madd_epi16(a, b); }
 
 /** Does an element-wise clamping of a VecI16 register
  *
@@ -155,7 +155,7 @@ inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm512_madd_epi16(a, b); }
  * \param maxs register containing the max values
  * \returns the result of the clamp
  */
-inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
+[[nodiscard]] inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
     return _mm512_min_epi16(_mm512_max_epi16(reg, mins), maxs);
 }
 
@@ -166,7 +166,7 @@ inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
  * \param maxs register containing the max values
  * \returns the result of the clamp
  */
-inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
+[[nodiscard]] inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
     return _mm512_min_epi32(_mm512_max_epi32(reg, mins), maxs);
 }
 
@@ -176,7 +176,9 @@ inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
  * \param shift the amount to shift by, known at compile time
  * \returns the shifted register
  */
-inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm512_slli_epi16(reg, shift); }
+[[nodiscard]] inline VecI16 lshift_i16(VecI16 reg, i32 shift) {
+    return _mm512_slli_epi16(reg, shift);
+}
 
 /** Does an element-wise arithmetic right shift of a VecI32 register by a constexpr shift amount
  *
@@ -184,21 +186,25 @@ inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm512_slli_epi16(reg, 
  * \param shift the amount to shift by, known at compile time
  * \returns the shifted register
  */
-inline VecI32 rshift_i32(VecI32 reg, i32 shift) { return _mm512_srai_epi32(reg, shift); }
+[[nodiscard]] inline VecI32 rshift_i32(VecI32 reg, i32 shift) {
+    return _mm512_srai_epi32(reg, shift);
+}
 
 /** Extracts and converts the first 32 values of a VecI8 register to a VecI16 register
  *
  * \param reg register to convert
  * \returns the converted register
  */
-inline VecI16 low_i8_i16(VecI8 reg) { return _mm512_cvtepi8_epi16(_mm512_castsi512_si256(reg)); }
+[[nodiscard]] inline VecI16 low_i8_i16(VecI8 reg) {
+    return _mm512_cvtepi8_epi16(_mm512_castsi512_si256(reg));
+}
 
 /** Extracts and converts the last 32 values of a VecI8 register to a VecI16 register
  *
  * \param reg register to convert
  * \returns the converted register
  */
-inline VecI16 high_i8_i16(VecI8 reg) {
+[[nodiscard]] inline VecI16 high_i8_i16(VecI8 reg) {
     return _mm512_cvtepi8_epi16(_mm512_extracti64x4_epi64(reg, 1));
 }
 
@@ -209,14 +215,14 @@ inline VecI16 high_i8_i16(VecI8 reg) {
  * \param b register 2
  * \returns the packed register
  */
-inline VecU8 pack_u8_i16(VecI16 a, VecI16 b) { return _mm512_packus_epi16(a, b); }
+[[nodiscard]] inline VecU8 pack_u8_i16(VecI16 a, VecI16 b) { return _mm512_packus_epi16(a, b); }
 
 /** Tiles a u8[4] array 16 times into a VecU8 register
  *
  * \param vals the value to tile
  * \returns the tiled register
  */
-inline VecU8 tile_u8(const u8* vals) {
+[[nodiscard]] inline VecU8 tile_u8(const u8* vals) {
     return _mm512_set1_epi32(*reinterpret_cast<const u32*>(vals));  // technically UB
 }
 
@@ -225,7 +231,9 @@ inline VecU8 tile_u8(const u8* vals) {
  * \param reg register to get mask for
  * \returns a bitmask of nonzero blocks
  */
-inline u32 nonzero_mask(VecU8 reg) { return _mm512_cmpgt_epi32_mask(reg, zero_i32()); }
+[[nodiscard]] inline u32 nonzero_mask(VecU8 reg) {
+    return _mm512_cmpgt_epi32_mask(reg, zero_i32());
+}
 
 /** Computes out[i] = a[i] + dot(b[4*i : 4*(i+1)], c[4*i : 4*(i+1)])
  *
@@ -234,7 +242,9 @@ inline u32 nonzero_mask(VecU8 reg) { return _mm512_cmpgt_epi32_mask(reg, zero_i3
  * \param c register 3
  * \returns the result of the accumulated dot product
  */
-inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) { return _mm512_dpbusd_epi32(a, b, c); }
+[[nodiscard]] inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) {
+    return _mm512_dpbusd_epi32(a, b, c);
+}
 
 /** Does an element-wise fused multiply add a[i] * b[i] + c[i]
  *
@@ -243,14 +253,16 @@ inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) { return _mm512_dpbusd_epi3
  * \param c register 3
  * \returns the result of the fused multiply add
  */
-inline VecI32 fmadd_i32(VecI32 a, VecI32 b, VecI32 c) { return add_i32(mullo_i32(a, b), c); }
+[[nodiscard]] inline VecI32 fmadd_i32(VecI32 a, VecI32 b, VecI32 c) {
+    return add_i32(mullo_i32(a, b), c);
+}
 
 /** Does a horizontal sum of a VecI32 register
  *
  * \param reg register to horizontally sum
  * \returns the horizontally summed result
  */
-inline i32 hadd_i32(VecI32 reg) {
+[[nodiscard]] inline i32 hadd_i32(VecI32 reg) {
     // https://stackoverflow.com/a/60109639/9984384
     // return _mm512_reduce_add_epi32(reg);  suboptimal in GCC
 
@@ -286,7 +298,7 @@ using VecI32 = __m256i;  // a list of 8x i32
  * \param src an array of 32x u8 elements
  * \returns the loaded register
  */
-inline VecU8 load_u8(const u8* src) {
+[[nodiscard]] inline VecU8 load_u8(const u8* src) {
     return _mm256_load_si256(reinterpret_cast<const VecU8*>(src));
 }
 
@@ -295,7 +307,7 @@ inline VecU8 load_u8(const u8* src) {
  * \param src an array of 32x i8 elements
  * \returns the loaded register
  */
-inline VecI8 load_i8(const i8* src) {
+[[nodiscard]] inline VecI8 load_i8(const i8* src) {
     return _mm256_load_si256(reinterpret_cast<const VecI8*>(src));
 }
 
@@ -304,7 +316,7 @@ inline VecI8 load_i8(const i8* src) {
  * \param src an array of 16x i16 elements
  * \returns the loaded register
  */
-inline VecI16 load_i16(const i16* src) {
+[[nodiscard]] inline VecI16 load_i16(const i16* src) {
     return _mm256_load_si256(reinterpret_cast<const VecI16*>(src));
 }
 
@@ -313,7 +325,7 @@ inline VecI16 load_i16(const i16* src) {
  * \param src an array of 8x i32 elements
  * \returns the loaded register
  */
-inline VecI32 load_i32(const i32* src) {
+[[nodiscard]] inline VecI32 load_i32(const i32* src) {
     return _mm256_load_si256(reinterpret_cast<const VecI32*>(src));
 }
 
@@ -346,27 +358,27 @@ inline void store_i32(i32* dst, VecI32 src) {
  *
  * \returns an all zero register
  */
-inline VecI16 zero_i16() { return _mm256_setzero_si256(); }
+[[nodiscard]] inline VecI16 zero_i16() { return _mm256_setzero_si256(); }
 
 /** Returns a VecI32 register with all zeros
  *
  * \returns an all zero register
  */
-inline VecI32 zero_i32() { return _mm256_setzero_si256(); }
+[[nodiscard]] inline VecI32 zero_i32() { return _mm256_setzero_si256(); }
 
 /** Returns a VecI16 register with all values set to val
  *
  * \param val the value to set to
  * \returns an all val register
  */
-inline VecI16 full_i16(i16 val) { return _mm256_set1_epi16(val); }
+[[nodiscard]] inline VecI16 full_i16(i16 val) { return _mm256_set1_epi16(val); }
 
 /** Returns a VecI32 register with all values set to val
  *
  * \param val the value to set to
  * \returns an all val register
  */
-inline VecI32 full_i32(i32 val) { return _mm256_set1_epi32(val); }
+[[nodiscard]] inline VecI32 full_i32(i32 val) { return _mm256_set1_epi32(val); }
 
 /** Does an element-wise addition of two VecI16 registers
  *
@@ -374,7 +386,7 @@ inline VecI32 full_i32(i32 val) { return _mm256_set1_epi32(val); }
  * \param b register 2
  * \returns the result of the addition
  */
-inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm256_add_epi16(a, b); }
+[[nodiscard]] inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm256_add_epi16(a, b); }
 
 /** Does an element-wise addition of two VecI32 registers
  *
@@ -382,7 +394,7 @@ inline VecI16 add_i16(VecI16 a, VecI16 b) { return _mm256_add_epi16(a, b); }
  * \param b register 2
  * \returns the result of the addition
  */
-inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm256_add_epi32(a, b); }
+[[nodiscard]] inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm256_add_epi32(a, b); }
 
 /** Does an element-wise subtraction of two VecI16 registers
  *
@@ -390,7 +402,7 @@ inline VecI32 add_i32(VecI32 a, VecI32 b) { return _mm256_add_epi32(a, b); }
  * \param b register 2
  * \returns the result of the subtraction
  */
-inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm256_sub_epi16(a, b); }
+[[nodiscard]] inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm256_sub_epi16(a, b); }
 
 /** Does an element-wise product of two VecI32 registers and keeps the low 32 bits
  *
@@ -398,7 +410,7 @@ inline VecI16 sub_i16(VecI16 a, VecI16 b) { return _mm256_sub_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm256_mullo_epi32(a, b); }
+[[nodiscard]] inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm256_mullo_epi32(a, b); }
 
 /** Does an element-wise product of two VecI16 registers and keeps the low 16 bits
  *
@@ -406,7 +418,7 @@ inline VecI32 mullo_i32(VecI32 a, VecI32 b) { return _mm256_mullo_epi32(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm256_mullo_epi16(a, b); }
+[[nodiscard]] inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm256_mullo_epi16(a, b); }
 
 /** Does an element-wise product of two VecI16 registers and keeps the high 16 bits
  *
@@ -414,7 +426,7 @@ inline VecI16 mullo_i16(VecI16 a, VecI16 b) { return _mm256_mullo_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication
  */
-inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm256_mulhi_epi16(a, b); }
+[[nodiscard]] inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm256_mulhi_epi16(a, b); }
 
 /** Does an element-wise multiplication of two VecI16 registers and horizontally adds the results,
  * creating a VecI32 result.
@@ -423,7 +435,7 @@ inline VecI16 mulhi_i16(VecI16 a, VecI16 b) { return _mm256_mulhi_epi16(a, b); }
  * \param b register 2
  * \returns the result of the multiplication-addition
  */
-inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm256_madd_epi16(a, b); }
+[[nodiscard]] inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm256_madd_epi16(a, b); }
 
 /** Does an element-wise clamping of a VecI16 register
  *
@@ -432,7 +444,7 @@ inline VecI32 madd_i16(VecI16 a, VecI16 b) { return _mm256_madd_epi16(a, b); }
  * \param maxs register containing the max values
  * \returns the result of the clamp
  */
-inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
+[[nodiscard]] inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
     return _mm256_min_epi16(_mm256_max_epi16(reg, mins), maxs);
 }
 
@@ -443,7 +455,7 @@ inline VecI16 clamp_i16(VecI16 reg, VecI16 mins, VecI16 maxs) {
  * \param maxs register containing the max values
  * \returns the result of the clamp
  */
-inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
+[[nodiscard]] inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
     return _mm256_min_epi32(_mm256_max_epi32(reg, mins), maxs);
 }
 
@@ -453,7 +465,9 @@ inline VecI32 clamp_i32(VecI32 reg, VecI32 mins, VecI32 maxs) {
  * \param shift the amount to shift by, known at compile time
  * \returns the shifted register
  */
-inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm256_slli_epi16(reg, shift); }
+[[nodiscard]] inline VecI16 lshift_i16(VecI16 reg, i32 shift) {
+    return _mm256_slli_epi16(reg, shift);
+}
 
 /** Does an element-wise arithmetic right shift of a VecI32 register by a constexpr shift amount
  *
@@ -461,21 +475,25 @@ inline VecI16 lshift_i16(VecI16 reg, i32 shift) { return _mm256_slli_epi16(reg, 
  * \param shift the amount to shift by, known at compile time
  * \returns the shifted register
  */
-inline VecI32 rshift_i32(VecI32 reg, i32 shift) { return _mm256_srai_epi32(reg, shift); }
+[[nodiscard]] inline VecI32 rshift_i32(VecI32 reg, i32 shift) {
+    return _mm256_srai_epi32(reg, shift);
+}
 
 /** Extracts and converts the first 16 values of a VecI8 register to a VecI16 register
  *
  * \param reg register to convert
  * \returns the converted register
  */
-inline VecI16 low_i8_i16(VecI8 reg) { return _mm256_cvtepi8_epi16(_mm256_castsi256_si128(reg)); }
+[[nodiscard]] inline VecI16 low_i8_i16(VecI8 reg) {
+    return _mm256_cvtepi8_epi16(_mm256_castsi256_si128(reg));
+}
 
 /** Extracts and converts the last 16 values of a VecI8 register to a VecI16 register
  *
  * \param reg register to convert
  * \returns the converted register
  */
-inline VecI16 high_i8_i16(VecI8 reg) {
+[[nodiscard]] inline VecI16 high_i8_i16(VecI8 reg) {
     return _mm256_cvtepi8_epi16(_mm256_extracti128_si256(reg, 1));
 }
 
@@ -486,14 +504,14 @@ inline VecI16 high_i8_i16(VecI8 reg) {
  * \param b register 2
  * \returns the packed register
  */
-inline VecU8 pack_u8_i16(VecI16 a, VecI16 b) { return _mm256_packus_epi16(a, b); }
+[[nodiscard]] inline VecU8 pack_u8_i16(VecI16 a, VecI16 b) { return _mm256_packus_epi16(a, b); }
 
 /** Tiles a u8[4] array 8 times into a VecU8 register
  *
  * \param vals the value to tile
  * \returns the tiled register
  */
-inline VecU8 tile_u8(const u8* vals) {
+[[nodiscard]] inline VecU8 tile_u8(const u8* vals) {
     return _mm256_set1_epi32(*reinterpret_cast<const u32*>(vals));  // technically UB
 }
 
@@ -502,7 +520,7 @@ inline VecU8 tile_u8(const u8* vals) {
  * \param reg register to get mask for
  * \returns a bitmask of nonzero blocks
  */
-inline u32 nonzero_mask(VecU8 reg) {
+[[nodiscard]] inline u32 nonzero_mask(VecU8 reg) {
     return _mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmpgt_epi32(reg, zero_i32())));
 }
 
@@ -513,7 +531,7 @@ inline u32 nonzero_mask(VecU8 reg) {
  * \param c register 3
  * \returns the result of the accumulated dot product
  */
-inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) {
+[[nodiscard]] inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) {
     return add_i32(a, _mm256_madd_epi16(_mm256_maddubs_epi16(b, c), full_i16(1)));
 }
 
@@ -524,14 +542,16 @@ inline VecI32 dpbusd_i32(VecI32 a, VecU8 b, VecI8 c) {
  * \param c register 3
  * \returns the result of the fused multiply add
  */
-inline VecI32 fmadd_i32(VecI32 a, VecI32 b, VecI32 c) { return add_i32(mullo_i32(a, b), c); }
+[[nodiscard]] inline VecI32 fmadd_i32(VecI32 a, VecI32 b, VecI32 c) {
+    return add_i32(mullo_i32(a, b), c);
+}
 
 /** Does a horizontal sum of a VecI32 register
  *
  * \param reg register to horizontally sum
  * \returns the horizontally summed result
  */
-inline i32 hadd_i32(VecI32 reg) {
+[[nodiscard]] inline i32 hadd_i32(VecI32 reg) {
     // https://stackoverflow.com/a/60109639/9984384
     __m128i lo128 = _mm256_castsi256_si128(reg);
     __m128i hi128 = _mm256_extracti128_si256(reg, 1);

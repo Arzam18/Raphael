@@ -52,7 +52,7 @@ public:
      * \param ttmove transposition table move
      * \returns the move generator
      */
-    static MoveGenerator negamax(
+    [[nodiscard]] static MoveGenerator negamax(
         chess::MoveList* movelist,
         const Position<true>* position,
         const History* history,
@@ -67,7 +67,7 @@ public:
      * \param ttmove transposition table move
      * \returns the move generator
      */
-    static MoveGenerator quiescence(
+    [[nodiscard]] static MoveGenerator quiescence(
         chess::MoveList* movelist,
         const Position<true>* position,
         const History* history,
@@ -82,7 +82,7 @@ public:
      * \param ttmove transposition table move
      * \returns the move generator
      */
-    static MoveGenerator probcut(
+    [[nodiscard]] static MoveGenerator probcut(
         chess::MoveList* movelist,
         const Position<true>* position,
         const History* history,
@@ -94,7 +94,7 @@ public:
      *
      * \returns the next move in the generator
      */
-    chess::Move next();
+    [[nodiscard]] chess::Move next();
 
     /** Signal move generator to skip quiet moves */
     void skip_quiets();
@@ -103,7 +103,7 @@ public:
      *
      * \returns current stage
      */
-    Stage stage() const;
+    [[nodiscard]] Stage stage() const;
 
 private:
     /** Initializes the move generator
@@ -135,6 +135,6 @@ private:
      *
      * \returns index of next highest scored move in the movelist
      */
-    usize select_next();
+    [[nodiscard]] usize select_next();
 };
 }  // namespace raphael

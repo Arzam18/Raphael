@@ -77,7 +77,7 @@ public:
     /** Returns the time elapsed (in ms) since the start of search.
      * Should only be called from the main thread
      * */
-    i64 get_time() const;
+    [[nodiscard]] i64 get_time() const;
 
 
     /** Increments the node counter
@@ -98,14 +98,14 @@ public:
      *
      * \returns number of nodes visited
      */
-    u64 get_nodes() const;
+    [[nodiscard]] u64 get_nodes() const;
 
     /** Returns the total number of nodes visited by a thread
      *
      * \param thread_id thread id
      * \returns node count of that thread
      */
-    u64 get_nodes(i32 thread_id) const;
+    [[nodiscard]] u64 get_nodes(i32 thread_id) const;
 
     /** Returns the number of nodes visited by a thread for a certain move
      *
@@ -113,7 +113,7 @@ public:
      * \param move move to get node count for
      * \returns number of nodes visited for that move
      */
-    u64 get_nodes(i32 thread_id, chess::Move move) const;
+    [[nodiscard]] u64 get_nodes(i32 thread_id, chess::Move move) const;
 
 
     /** Updates the seldepth of a thread
@@ -127,7 +127,7 @@ public:
      *
      * \returns max seldepth of any thread
      */
-    i32 get_seldepth() const;
+    [[nodiscard]] i32 get_seldepth() const;
 
 
     /** Sets stop and returns its value if the hard limit is reached for this thread
@@ -136,7 +136,7 @@ public:
      * \param stop bool reference which will turn false to indicate search should stop
      * \returns the new value of stop
      */
-    bool is_hard_limit_reached(i32 thread_id, std::atomic<bool>& stop) const;
+    [[nodiscard]] bool is_hard_limit_reached(i32 thread_id, std::atomic<bool>& stop) const;
 
     /** Sets stop and returns its value if the soft limit for this thread is reached
      * Checked at the end of a search at `depth`
@@ -148,7 +148,7 @@ public:
      * \param depth current search depth
      * \returns the new value of stop
      */
-    bool is_soft_limit_reached(
+    [[nodiscard]] bool is_soft_limit_reached(
         i32 thread_id, std::atomic<bool>& stop, chess::Move bestmove, i32 score, i32 depth
     );
 
@@ -161,6 +161,6 @@ private:
      * \param depth current search depth
      * \returns the new soft time limit
      */
-    i64 adjust_soft_time(i32 thread_id, chess::Move bestmove, i32 score, i32 depth);
+    [[nodiscard]] i64 adjust_soft_time(i32 thread_id, chess::Move bestmove, i32 score, i32 depth);
 };
 }  // namespace raphael
