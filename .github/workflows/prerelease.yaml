@@ -144,7 +144,7 @@ jobs:
             ARCH=generic \
             DEBUG=release \
             EVAL=multilayer \
-            LDFLAGS="-static-libstdc++"
+            LDFLAGS="-static-libstdc++ -lc++_shared"
 
           VERSION=$(cat version.txt)
           mkdir -p artifacts
