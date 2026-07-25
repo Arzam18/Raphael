@@ -141,6 +141,7 @@ jobs:
 
           make uci \
             CXX="$NDK_CXX" \
+            LDFLAGS="-static-libstdc++" \
             ARCH=generic \
             DEBUG=release \
             EVAL=multilayer
@@ -154,6 +155,16 @@ jobs:
           else
             find . -maxdepth 2 -type f -executable -exec cp {} artifacts/Raphael-${VERSION}-android-arm64 \;
           fi
+
+      - name: Add Binary Download Link to Job Summary
+        run: |
+          VERSION=$(cat version.txt)
+          BINARY_NAME="Raphael-${VERSION}-android-arm64"
+          echo "### 📱 Android Build Artifact Successfully Compiled" >> $GITHUB_STEP_SUMMARY
+          echo "You can download the compiled binary directly from the **Artifacts** section at the bottom of this workflow summary page, or use the pre-release link once published." >> $GITHUB_STEP_SUMMARY
+          echo "- **Binary File Name:** \`${BINARY_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Architecture:** \`aarch64 / ARM64\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Linking:** \`Statically Linked (No libc++_shared dependency required)\`" >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         with:
