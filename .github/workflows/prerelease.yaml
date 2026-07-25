@@ -94,14 +94,25 @@ jobs:
                   with open(datagen_path, "w", encoding="utf-8") as f:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
+
+          # 4. Patch Makefile to remove x86-64 flag and include SIMDe path
+          if os.path.exists("Makefile"):
+              with open("Makefile", "r", encoding="utf-8") as f:
+                  mk_content = f.read()
+              
+              # Neutralize the x86-64 generic flag so it uses NDK defaults for ARM64
+              mk_content = mk_content.replace("CCFLAGS_GENERIC     := -march=x86-64", "CCFLAGS_GENERIC     :=")
+              # Add SIMDe include path
+              mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde")
+              
+              with open("Makefile", "w", encoding="utf-8") as f:
+                  f.write(mk_content)
+              print("Successfully patched Makefile for ARM64.")
           '
 
       - name: Build Raphael UCI for Android ARM64
         run: |
           NDK_CXX="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++"
-          
-          # Inject SIMDe include path into the Makefile safely
-          sed -i 's|-Isrc|-Isrc -I./simde|g' Makefile
 
           make uci \
             CXX="$NDK_CXX" \
