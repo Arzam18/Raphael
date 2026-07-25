@@ -95,13 +95,13 @@ jobs:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
 
-          # 4. Patch Makefile to remove x86-64 flag and add SIMDe path
+          # 4. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
           if os.path.exists("Makefile"):
               with open("Makefile", "r", encoding="utf-8") as f:
                   mk_content = f.read()
               
               mk_content = mk_content.replace("CCFLAGS_GENERIC     := -march=x86-64", "CCFLAGS_GENERIC     :=")
-              mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde")
+              mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde -Wno-missing-braces -Wno-unused-variable -Wno-unused-but-set-variable")
               
               with open("Makefile", "w", encoding="utf-8") as f:
                   f.write(mk_content)
