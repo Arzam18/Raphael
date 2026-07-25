@@ -1,4 +1,4 @@
-name: Build Pre-Release
+name: Build Android Pre-Release
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-linux:
+  build-android:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
@@ -19,51 +19,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Setup SIMDe and Patch Simd.h for ARM64
         run: |
-          sudo apt-get update
-          sudo apt-get install -y g++ make
+          git clone --depth 1 https://github.com/simd-everywhere/simde.git
+          python3 -c '
+          simd_path = "src/eval/Simd.h"
+          with open(simd_path, "r", encoding="utf-8") as f:
+              content = f.read()
 
-      - name: Build
-        run: make CXX=g++ prerelease_all
+          arm_simde_block = """#if defined(__aarch64__) || defined(__ARM_NEON)
+          #define SIMDE_ENABLE_NATIVE_ALIASES
+          #include "simde/x86/avx2.h"
+          #define USE_AVX2
+          #define USE_SIMD 256
+          #define ALIGNMENT 32
+          #define SIMD_REGS 16
+          using VecU8 = simde__m256i;
+          using VecI8 = simde__m256i;
+          using VecI16 = simde__m256i;
+          using VecI32 = simde__m256i;
+          #else
+          """
 
-      - name: Collect binaries
+          if "#pragma once" in content:
+              content = content.replace("#pragma once", "#pragma once\n" + arm_simde_block + "\n#endif")
+          else:
+              content = arm_simde_block + content + "\n#endif"
+
+          with open(simd_path, "w", encoding="utf-8") as f:
+              f.write(content)
+          '
+
+      - name: Build Raphael UCI for Android ARM64
         run: |
-          mkdir artifacts
-          find . -maxdepth 1 -type f -name "Raphael-*" -exec cp {} artifacts/ \;
+          NDK_CXX="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++"
+          
+          # Inject SIMDe include path into the Makefile safely
+          sed -i 's|-Isrc|-Isrc -I./simde|g' Makefile
+
+          make uci \
+            CXX="$NDK_CXX" \
+            ARCH=generic \
+            DEBUG=release \
+            EVAL=multilayer
+
+          VERSION=$(cat version.txt)
+          mkdir -p artifacts
+          mv uci artifacts/Raphael-${VERSION}-android-arm64
 
       - uses: actions/upload-artifact@v4
         with:
-          name: raphael-linux
-          path: artifacts/*
-
-  build-windows:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        shell: cmd
-        run: make CXX=g++ ARCH=native SHELL=cmd.exe prerelease_all
-
-      - name: Collect binaries
-        run: |
-          New-Item -ItemType Directory -Force -Path artifacts
-          Get-ChildItem -Path . -Filter "Raphael-*" -File | Copy-Item -Destination artifacts/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: raphael-windows
+          name: raphael-android
           path: artifacts/*
 
   publish-prerelease:
     needs:
-      - build-linux
-      - build-windows
+      - build-android
     runs-on: ubuntu-latest
 
     steps:
@@ -79,17 +90,11 @@ jobs:
         run: |
           gh release delete pre-release --yes --cleanup-tag || true
           gh release create pre-release \
-            --title "Latest Pre-Release" \
+            --title "Latest Android Pre-Release" \
             --prerelease \
-            release-assets/raphael-linux/* \
-            release-assets/raphael-windows/*
+            release-assets/raphael-android/*
 
-      - name: Clean up Linux artifact
+      - name: Clean up Android artifact
         uses: geekyeggo/delete-artifact@v5
         with:
-          name: raphael-linux
-
-      - name: Clean up Windows artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: raphael-windows
+          name: raphael-android
