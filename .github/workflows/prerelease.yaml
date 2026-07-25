@@ -1,6 +1,8 @@
 name: Build Android Pre-Release
 
 on:
+  push:
+    branches: [ "main" ]
   pull_request:
     types:
       - closed
@@ -12,6 +14,7 @@ permissions:
 jobs:
   build-android:
     if: |
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
@@ -19,13 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SIMDe and Dynamically Patch Simd.h for ARM64
+      - name: Setup SIMDe and Patch Source Files for ARM64
         run: |
           git clone --depth 1 https://github.com/simd-everywhere/simde.git
           python3 -c '
           import os
 
-          # Dynamically locate Simd.h anywhere in the repo
+          # 1. Dynamically locate and patch Simd.h
           simd_path = None
           for root, dirs, files in os.walk("."):
               for file in files:
@@ -35,15 +38,11 @@ jobs:
               if simd_path:
                   break
 
-          if not simd_path:
-              raise FileNotFoundError("Could not find Simd.h in the repository!")
+          if simd_path:
+              with open(simd_path, "r", encoding="utf-8") as f:
+                  content = f.read()
 
-          print(f"Found Simd.h at: {simd_path}")
-
-          with open(simd_path, "r", encoding="utf-8") as f:
-              content = f.read()
-
-          arm_simde_block = """#if defined(__aarch64__) || defined(__ARM_NEON)
+              arm_simde_block = """#if defined(__aarch64__) || defined(__ARM_NEON)
           #define SIMDE_ENABLE_NATIVE_ALIASES
           #include "simde/x86/avx2.h"
           #define USE_AVX2
@@ -57,14 +56,29 @@ jobs:
           #else
           """
 
-          if "#pragma once" in content:
-              content = content.replace("#pragma once", "#pragma once\n" + arm_simde_block + "\n#endif")
-          else:
-              content = arm_simde_block + content + "\n#endif"
+              if "#pragma once" in content:
+                  content = content.replace("#pragma once", "#pragma once\n" + arm_simde_block + "\n#endif")
+              else:
+                  content = arm_simde_block + content + "\n#endif"
 
-          with open(simd_path, "w", encoding="utf-8") as f:
-              f.write(content)
-          print("Successfully patched Simd.h for ARM64.")
+              with open(simd_path, "w", encoding="utf-8") as f:
+                  f.write(content)
+              print("Successfully patched Simd.h for ARM64.")
+
+          # 2. Patch Raphael.cpp to fix variable-length array initialization error on Clang
+          raphael_path = "src/Raphael/Raphael.cpp"
+          if os.path.exists(raphael_path):
+              with open(raphael_path, "r", encoding="utf-8") as f:
+                  raphael_content = f.read()
+              
+              target_vla = "i32 thread_weights[thread_data_.size()] = {};"
+              replacement = "std::vector<i32> thread_weights(thread_data_.size(), 0);"
+              
+              if target_vla in raphael_content:
+                  raphael_content = raphael_content.replace(target_vla, replacement)
+                  with open(raphael_path, "w", encoding="utf-8") as f:
+                      f.write(raphael_content)
+                  print("Successfully patched VLA in Raphael.cpp.")
           '
 
       - name: Build Raphael UCI for Android ARM64
