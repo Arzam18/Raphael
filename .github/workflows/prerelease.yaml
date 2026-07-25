@@ -95,18 +95,18 @@ jobs:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
 
-          # 4. Patch accumulator.cpp constexpr lambda evaluation for Clang compatibility
+          # 4. Patch accumulator.cpp to remove strict constexpr requirements for Clang compatibility
           acc_path = "src/eval/accumulator.cpp"
           if os.path.exists(acc_path):
               with open(acc_path, "r", encoding="utf-8") as f:
                   acc_content = f.read()
               
-              # Change static constexpr auto PIECE_INDICES to inline const auto or standard evaluation to bypass strict constexpr limits
-              acc_content = acc_content.replace("static constexpr auto PIECE_INDICES = [] {", "inline const auto PIECE_INDICES = [] {")
+              acc_content = acc_content.replace("static constexpr auto PIECE_INDICES", "static const auto PIECE_INDICES")
+              acc_content = acc_content.replace("static constexpr auto OFFSETS", "static const auto OFFSETS")
               
               with open(acc_path, "w", encoding="utf-8") as f:
                   f.write(acc_content)
-              print("Successfully patched accumulator.cpp.")
+              print("Successfully patched accumulator.cpp constexpr limits.")
 
           # 5. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
           if os.path.exists("Makefile"):
