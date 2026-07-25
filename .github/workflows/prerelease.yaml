@@ -1,181 +1,190 @@
 name: Build Android Pre-Release
 
 on:
-push:
-branches: [ "main" ]
-pull_request:
-types:
-- closed
-workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
 
 permissions:
-contents: write
+  contents: write
 
 jobs:
-build-android:
-if: |
-github.event_name == 'push' ||
-github.event_name == 'workflow_dispatch' ||
-(github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
-runs-on: ubuntu-latest
+  build-android:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
 
-steps:
-- uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-- name: Setup SIMDe and Patch Source Files for ARM64
-run: |
-git clone --depth 1 https://github.com/simd-everywhere/simde.git
-python3 -c '
-import os
+      - name: Setup SIMDe and Patch Source Files for ARM64
+        run: |
+          git clone --depth 1 https://github.com/simd-everywhere/simde.git
+          python3 -c '
+          import os
 
-# 1. Dynamically locate and patch Simd.h
-simd_path = None
-for root, dirs, files in os.walk("."):
-for file in files:
-if file.lower() == "simd.h":
-simd_path = os.path.join(root, file)
-break
-if simd_path:
-break
+          # 1. Dynamically locate and patch Simd.h
+          simd_path = None
+          for root, dirs, files in os.walk("."):
+              for file in files:
+                  if file.lower() == "simd.h":
+                      simd_path = os.path.join(root, file)
+                      break
+              if simd_path:
+                  break
 
-if simd_path:
-with open(simd_path, "r", encoding="utf-8") as f:
-content = f.read()
+          if simd_path:
+              with open(simd_path, "r", encoding="utf-8") as f:
+                  content = f.read()
 
-arm_simde_block = """#if defined(aarch64) || defined(__ARM_NEON)
-#define SIMDE_ENABLE_NATIVE_ALIASES
-#include "simde/x86/avx2.h"
-#define USE_AVX2
-#define USE_SIMD 256
-#define ALIGNMENT 32
-#define SIMD_REGS 16
-using VecU8 = simde__m256i;
-using VecI8 = simde__m256i;
-using VecI16 = simde__m256i;
-using VecI32 = simde__m256i;
-#else
-"""
+              arm_simde_block = """#if defined(__aarch64__) || defined(__ARM_NEON)
+          #define SIMDE_ENABLE_NATIVE_ALIASES
+          #include "simde/x86/avx2.h"
+          #define USE_AVX2
+          #define USE_SIMD 256
+          #define ALIGNMENT 32
+          #define SIMD_REGS 16
+          using VecU8 = simde__m256i;
+          using VecI8 = simde__m256i;
+          using VecI16 = simde__m256i;
+          using VecI32 = simde__m256i;
+          #else
+          """
 
-if "#pragma once" in content:
-content = content.replace("#pragma once", "#pragma once\n" + arm_simde_block + "\n#endif")
-else:
-content = arm_simde_block + content + "\n#endif"
+              if "#pragma once" in content:
+                  content = content.replace("#pragma once", "#pragma once\n" + arm_simde_block + "\n#endif")
+              else:
+                  content = arm_simde_block + content + "\n#endif"
 
-with open(simd_path, "w", encoding="utf-8") as f:
-f.write(content)
-print("Successfully patched Simd.h for ARM64.")
+              with open(simd_path, "w", encoding="utf-8") as f:
+                  f.write(content)
+              print("Successfully patched Simd.h for ARM64.")
 
-# 2. Patch Raphael.cpp to fix variable-length array initialization error on Clang
-raphael_path = "src/Raphael/Raphael.cpp"
-if os.path.exists(raphael_path):
-with open(raphael_path, "r", encoding="utf-8") as f:
-raphael_content = f.read()
+          # 2. Patch Raphael.cpp to fix variable-length array initialization error on Clang
+          raphael_path = "src/Raphael/Raphael.cpp"
+          if os.path.exists(raphael_path):
+              with open(raphael_path, "r", encoding="utf-8") as f:
+                  raphael_content = f.read()
+              
+              target_vla = "i32 thread_weights[thread_data_.size()] = {};"
+              replacement = "std::vector<i32> thread_weights(thread_data_.size(), 0);"
+              
+              if target_vla in raphael_content:
+                  raphael_content = raphael_content.replace(target_vla, replacement)
+                  with open(raphael_path, "w", encoding="utf-8") as f:
+                      f.write(raphael_content)
+                  print("Successfully patched VLA in Raphael.cpp.")
 
-target_vla = "i32 thread_weights[thread_data_.size()] = {};"
-replacement = "std::vector<i32> thread_weights(thread_data_.size(), 0);"
+          # 3. Patch datagen.cpp to fix thread array VLA error on Clang
+          datagen_path = "src/Raphael/datagen.cpp"
+          if os.path.exists(datagen_path):
+              with open(datagen_path, "r", encoding="utf-8") as f:
+                  datagen_content = f.read()
+              
+              target_vla_dg = "thread threads[concurrency];"
+              replacement_dg = "std::vector<thread> threads(concurrency);"
+              
+              if target_vla_dg in datagen_content:
+                  datagen_content = datagen_content.replace(target_vla_dg, replacement_dg)
+                  with open(datagen_path, "w", encoding="utf-8") as f:
+                      f.write(datagen_content)
+                  print("Successfully patched VLA in datagen.cpp.")
 
-if target_vla in raphael_content:
-raphael_content = raphael_content.replace(target_vla, replacement)
-with open(raphael_path, "w", encoding="utf-8") as f:
-f.write(raphael_content)
-print("Successfully patched VLA in Raphael.cpp.")
+          # 4. Patch accumulator.cpp to remove strict constexpr requirements for Clang compatibility
+          acc_path = "src/eval/accumulator.cpp"
+          if os.path.exists(acc_path):
+              with open(acc_path, "r", encoding="utf-8") as f:
+                  acc_content = f.read()
+              
+              acc_content = acc_content.replace("static constexpr auto PIECE_INDICES", "static const auto PIECE_INDICES")
+              acc_content = acc_content.replace("static constexpr auto OFFSETS", "static const auto OFFSETS")
+              acc_content = acc_content.replace("static constexpr auto ATTACK_INDICES", "static const auto ATTACK_INDICES")
+              
+              with open(acc_path, "w", encoding="utf-8") as f:
+                  f.write(acc_content)
+              print("Successfully patched all table initializations in accumulator.cpp.")
 
-# 3. Patch datagen.cpp to fix thread array VLA error on Clang
-datagen_path = "src/Raphael/datagen.cpp"
-if os.path.exists(datagen_path):
-with open(datagen_path, "r", encoding="utf-8") as f:
-datagen_content = f.read()
+          # 5. Patch Makefile to remove x86-64 flag, LTO, SFML flags, add SIMDe path, and ignore harmless Clang warnings
+          if os.path.exists("Makefile"):
+              with open("Makefile", "r", encoding="utf-8") as f:
+                  mk_content = f.read()
+              
+              mk_content = mk_content.replace("CCFLAGS_GENERIC     := -march=x86-64", "CCFLAGS_GENERIC     :=")
+              mk_content = mk_content.replace("-flto=auto", "")
+              mk_content = mk_content.replace("-ISFML-3.0.2/include", "")
+              mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde -Wno-missing-braces -Wno-unused-variable -Wno-unused-but-set-variable")
+              
+              with open("Makefile", "w", encoding="utf-8") as f:
+                  f.write(mk_content)
+              print("Successfully patched Makefile.")
+          '
 
-target_vla_dg = "thread threads[concurrency];"
-replacement_dg = "std::vector<thread> threads(concurrency);"
+      - name: Preprocess Network Natively on Host
+        run: |
+          DEFAULT_NET=$(cat network.txt)
+          EVALFILE="${DEFAULT_NET}.nnue"
+          
+          echo "Downloading network ${DEFAULT_NET}..."
+          curl -sL https://github.com/Orbital-Web/Raphael-Net/releases/download/${DEFAULT_NET}/${DEFAULT_NET}.nnue -o ${EVALFILE}
+          
+          echo "Building and running perm tool using host g++..."
+          make perm CXX=g++
+          ./perm ${EVALFILE}
+          make clean
 
-if target_vla_dg in datagen_content:
-datagen_content = datagen_content.replace(target_vla_dg, replacement_dg)
-with open(datagen_path, "w", encoding="utf-8") as f:
-f.write(datagen_content)
-print("Successfully patched VLA in datagen.cpp.")
+      - name: Build Raphael UCI for Android ARM64
+        run: |
+          NDK_CXX="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++"
 
-# 4. Patch accumulator.cpp to remove strict constexpr requirements for Clang compatibility
-acc_path = "src/eval/accumulator.cpp"
-if os.path.exists(acc_path):
-with open(acc_path, "r", encoding="utf-8") as f:
-acc_content = f.read()
+          make uci \
+            CXX="$NDK_CXX" \
+            ARCH=generic \
+            DEBUG=release \
+            EVAL=multilayer
 
-acc_content = acc_content.replace("static constexpr auto PIECE_INDICES", "static const auto PIECE_INDICES")
-acc_content = acc_content.replace("static constexpr auto OFFSETS", "static const auto OFFSETS")
-acc_content = acc_content.replace("static constexpr auto ATTACK_INDICES", "static const auto ATTACK_INDICES")
+          VERSION=$(cat version.txt)
+          mkdir -p artifacts
+          if [ -f "uci" ]; then
+            cp uci artifacts/Raphael-${VERSION}-android-arm64
+          elif [ -f "src/uci" ]; then
+            cp src/uci artifacts/Raphael-${VERSION}-android-arm64
+          else
+            find . -maxdepth 2 -type f -executable -exec cp {} artifacts/Raphael-${VERSION}-android-arm64 \;
+          fi
 
-with open(acc_path, "w", encoding="utf-8") as f:
-f.write(acc_content)
-print("Successfully patched all table initializations in accumulator.cpp.")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: raphael-android
+          path: artifacts/*
 
-# 5. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
-if os.path.exists("Makefile"):
-with open("Makefile", "r", encoding="utf-8") as f:
-mk_content = f.read()
+  publish-prerelease:
+    needs:
+      - build-android
+    runs-on: ubuntu-latest
 
-mk_content = mk_content.replace("CCFLAGS_GENERIC := -march=x86-64", "CCFLAGS_GENERIC :=")
-mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde -Wno-missing-braces -Wno-unused-variable -Wno-unused-but-set-variable")
+    steps:
+      - uses: actions/checkout@v4
 
-with open("Makefile", "w", encoding="utf-8") as f:
-f.write(mk_content)
-print("Successfully patched Makefile.")
-'
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
 
-- name: Preprocess Network Natively on Host
-run: |
-DEFAULT_NET= {DEFAULT_NET}.nnue"
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete pre-release --yes --cleanup-tag || true
+          gh release create pre-release \
+            --title "Latest Android Pre-Release" \
+            --prerelease \
+            release-assets/raphael-android/*
 
-echo "Downloading network  {DEFAULT_NET}/ {EVALFILE}
-
-echo "Building and running perm tool using host g++..."
-make perm CXX=g++
-./perm $`{EVALFILE}
-make clean
-
-- name: Build Raphael UCI for Android ARM64
-run: |
-NDK_CXX="`$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++"
-
-make uci 
- CXX="$`NDK_CXX" 
- ARCH=generic 
- DEBUG=release 
- EVAL=multilayer
-
-VERSION=$(cat version.txt) mkdir -p artifacts if [ -f "uci" ]; then cp uci artifacts/Raphael-${VERSION}-android-arm64
-elif [ -f "src/uci" ]; then
-cp src/uci artifacts/Raphael-${VERSION}-android-arm64 else find . -maxdepth 2 -type f -executable -exec cp {} artifacts/Raphael-${VERSION}-android-arm64 ;
-fi
-
-- uses: actions/upload-artifact@v4
-with:
-name: raphael-android
-path: artifacts/*
-
-publish-prerelease:
-needs:
-- build-android
-runs-on: ubuntu-latest
-
-steps:
-- uses: actions/checkout@v4
-
-- uses: actions/download-artifact@v4
-with:
-path: release-assets
-
-- name: Publish prerelease
-env:
-GH_TOKEN: `${{ github.token }}
-run: |
-gh release delete pre-release --yes --cleanup-tag || true
-gh release create pre-release 
- --title "Latest Android Pre-Release" 
- --prerelease 
- release-assets/raphael-android/*
-
-- name: Clean up Android artifact
-uses: geekyeggo/delete-artifact@v5
-with:
-name: raphael-android
+      - name: Clean up Android artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: raphael-android
