@@ -103,10 +103,11 @@ jobs:
               
               acc_content = acc_content.replace("static constexpr auto PIECE_INDICES", "static const auto PIECE_INDICES")
               acc_content = acc_content.replace("static constexpr auto OFFSETS", "static const auto OFFSETS")
+              acc_content = acc_content.replace("static constexpr auto ATTACK_INDICES", "static const auto ATTACK_INDICES")
               
               with open(acc_path, "w", encoding="utf-8") as f:
                   f.write(acc_content)
-              print("Successfully patched accumulator.cpp constexpr limits.")
+              print("Successfully patched all table initializations in accumulator.cpp.")
 
           # 5. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
           if os.path.exists("Makefile"):
