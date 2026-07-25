@@ -95,14 +95,13 @@ jobs:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
 
-          # 4. Patch Makefile to remove x86-64 flag, add SIMDe path, and disable perm auto-execution
+          # 4. Patch Makefile to remove x86-64 flag and add SIMDe path
           if os.path.exists("Makefile"):
               with open("Makefile", "r", encoding="utf-8") as f:
                   mk_content = f.read()
               
               mk_content = mk_content.replace("CCFLAGS_GENERIC     := -march=x86-64", "CCFLAGS_GENERIC     :=")
               mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde")
-              mk_content = mk_content.replace("./$(PERM_EXE)", "true #./$(PERM_EXE)")
               
               with open("Makefile", "w", encoding="utf-8") as f:
                   f.write(mk_content)
@@ -113,17 +112,14 @@ jobs:
         run: |
           DEFAULT_NET=$(cat network.txt)
           EVALFILE="${DEFAULT_NET}.nnue"
-          VERSION=$(cat version.txt)
           
           echo "Downloading network ${DEFAULT_NET}..."
           curl -sL https://github.com/Orbital-Web/Raphael-Net/releases/download/${DEFAULT_NET}/${DEFAULT_NET}.nnue -o ${EVALFILE}
           
-          echo "Compiling permute tool natively with host g++..."
-          g++ -std=c++20 -O3 src/Raphael/*.cpp src/eval/*.cpp src/eval/net/permute.cpp -o perm -Isrc -DNDEBUG -DEVAL_NNUE -DEVAL_MULTILAYER -DNETWORK_FILE=\"${EVALFILE}\" -DVERSION=\"${VERSION}\" -Wno-interference-size
-          
-          echo "Running network preprocessing..."
+          echo "Building and running perm tool using host g++..."
+          make perm CXX=g++
           ./perm ${EVALFILE}
-          rm -f perm
+          make clean
 
       - name: Build Raphael UCI for Android ARM64
         run: |
