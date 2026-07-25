@@ -95,7 +95,27 @@ jobs:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
 
-          # 4. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
+          # 4. Patch accumulator.cpp to avoid complex lambda constexpr evaluation on Android Clang
+          acc_path = "src/eval/accumulator.cpp"
+          if os.path.exists(acc_path):
+              with open(acc_path, "r", encoding="utf-8") as f:
+                  acc_content = f.read()
+              
+              # Replace complex lambda init with a simpler initialization or mutable/runtime fallback if needed, 
+              # or convert it to standard function/loop evaluation.
+              target_acc = "static constexpr auto PIECE_INDICES = [] {"
+              if target_acc in acc_content:
+                  # Let us simplify PIECE_INDICES initialization
+                  replacement_acc = """inline auto init_piece_indices = [] {
+              MultiArray<u8, 12, 64, 64> dst{};"""
+                  acc_content = acc_content.replace(target_acc, replacement_acc)
+                  acc_content = acc_content.replace("constexpr auto PIECE_INDICES", "const auto PIECE_INDICES")
+                  
+                  with open(acc_path, "w", encoding="utf-8") as f:
+                      f.write(acc_content)
+                  print("Successfully patched accumulator.cpp.")
+
+          # 5. Patch Makefile to remove x86-64 flag, add SIMDe path, and ignore harmless Clang warnings
           if os.path.exists("Makefile"):
               with open("Makefile", "r", encoding="utf-8") as f:
                   mk_content = f.read()
