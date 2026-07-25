@@ -19,11 +19,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SIMDe and Patch Simd.h for ARM64
+      - name: Setup SIMDe and Dynamically Patch Simd.h for ARM64
         run: |
           git clone --depth 1 https://github.com/simd-everywhere/simde.git
           python3 -c '
-          simd_path = "src/eval/Simd.h"
+          import os
+
+          # Dynamically locate Simd.h anywhere in the repo
+          simd_path = None
+          for root, dirs, files in os.walk("."):
+              for file in files:
+                  if file.lower() == "simd.h":
+                      simd_path = os.path.join(root, file)
+                      break
+              if simd_path:
+                  break
+
+          if not simd_path:
+              raise FileNotFoundError("Could not find Simd.h in the repository!")
+
+          print(f"Found Simd.h at: {simd_path}")
+
           with open(simd_path, "r", encoding="utf-8") as f:
               content = f.read()
 
@@ -48,6 +64,7 @@ jobs:
 
           with open(simd_path, "w", encoding="utf-8") as f:
               f.write(content)
+          print("Successfully patched Simd.h for ARM64.")
           '
 
       - name: Build Raphael UCI for Android ARM64
