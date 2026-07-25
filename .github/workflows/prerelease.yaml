@@ -79,6 +79,21 @@ jobs:
                   with open(raphael_path, "w", encoding="utf-8") as f:
                       f.write(raphael_content)
                   print("Successfully patched VLA in Raphael.cpp.")
+
+          # 3. Patch datagen.cpp to fix thread array VLA error on Clang
+          datagen_path = "src/Raphael/datagen.cpp"
+          if os.path.exists(datagen_path):
+              with open(datagen_path, "r", encoding="utf-8") as f:
+                  datagen_content = f.read()
+              
+              target_vla_dg = "thread threads[concurrency];"
+              replacement_dg = "std::vector<thread> threads(concurrency);"
+              
+              if target_vla_dg in datagen_content:
+                  datagen_content = datagen_content.replace(target_vla_dg, replacement_dg)
+                  with open(datagen_path, "w", encoding="utf-8") as f:
+                      f.write(datagen_content)
+                  print("Successfully patched VLA in datagen.cpp.")
           '
 
       - name: Build Raphael UCI for Android ARM64
