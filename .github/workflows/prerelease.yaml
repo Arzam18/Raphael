@@ -94,26 +94,28 @@ jobs:
                   with open(datagen_path, "w", encoding="utf-8") as f:
                       f.write(datagen_content)
                   print("Successfully patched VLA in datagen.cpp.")
-
-          # 4. Patch Makefile to remove x86-64 flag and include SIMDe path
-          if os.path.exists("Makefile"):
-              with open("Makefile", "r", encoding="utf-8") as f:
-                  mk_content = f.read()
-              
-              # Neutralize the x86-64 generic flag so it uses NDK defaults for ARM64
-              mk_content = mk_content.replace("CCFLAGS_GENERIC     := -march=x86-64", "CCFLAGS_GENERIC     :=")
-              # Add SIMDe include path
-              mk_content = mk_content.replace("-Isrc", "-Isrc -I./simde")
-              
-              with open("Makefile", "w", encoding="utf-8") as f:
-                  f.write(mk_content)
-              print("Successfully patched Makefile for ARM64.")
           '
+
+      - name: Preprocess Network Natively on Host
+        run: |
+          DEFAULT_NET=$(cat network.txt)
+          EVALFILE="${DEFAULT_NET}.nnue"
+          
+          echo "Downloading network ${DEFAULT_NET}..."
+          curl -sL https://github.com/Orbital-Web/Raphael-Net/releases/download/${DEFAULT_NET}/${DEFAULT_NET}.nnue -o ${EVALFILE}
+          
+          echo "Compiling permute tool natively with host g++..."
+          g++ -std=c++20 -O3 src/Raphael/*.cpp src/eval/*.cpp src/eval/net/permute.cpp -o perm -Isrc -DNDEBUG -DEVAL_NNUE -DEVAL_MULTILAYER -DNETWORK_FILE=\"${EVALFILE}\"
+          
+          echo "Running network preprocessing..."
+          ./perm ${EVALFILE}
+          rm -f perm
 
       - name: Build Raphael UCI for Android ARM64
         run: |
           NDK_CXX="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++"
 
+          # Run make uci now that the network file is preprocessed, skipping perm rebuild
           make uci \
             CXX="$NDK_CXX" \
             ARCH=generic \
