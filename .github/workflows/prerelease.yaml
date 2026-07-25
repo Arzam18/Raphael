@@ -143,11 +143,18 @@ jobs:
             CXX="$NDK_CXX" \
             ARCH=generic \
             DEBUG=release \
-            EVAL=multilayer
+            EVAL=multilayer \
+            LDFLAGS="-static-libstdc++"
 
           VERSION=$(cat version.txt)
           mkdir -p artifacts
-          mv uci artifacts/Raphael-${VERSION}-android-arm64
+          if [ -f "uci" ]; then
+            cp uci artifacts/Raphael-${VERSION}-android-arm64
+          elif [ -f "src/uci" ]; then
+            cp src/uci artifacts/Raphael-${VERSION}-android-arm64
+          else
+            find . -maxdepth 2 -type f -executable -exec cp {} artifacts/Raphael-${VERSION}-android-arm64 \;
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
