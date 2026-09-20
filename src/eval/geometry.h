@@ -20,6 +20,8 @@ struct Vector {
     VecU8 raw;
 #elif defined(USE_AVX2)
     VecU8 raw[2];
+#elif defined(USE_NEON)
+    VecU8 raw[4];
 #endif
 
     /** Loads a Vector
@@ -41,7 +43,7 @@ struct Vector {
      */
     [[nodiscard]] Vector flip() const;
 
-#if defined(USE_AVX2)
+#if defined(USE_AVX2) || defined(USE_NEON)
     /** Returns a mask of locations where _mm256_cmpeq_epi8 returns true for each byte
      *
      * \returns the mask of set bytes
@@ -57,6 +59,9 @@ struct Permutation {
     Vector indices;
     BitRays valid;
 #elif defined(USE_AVX2)
+    Vector indices;
+    Vector invalid;
+#elif defined(USE_NEON)
     Vector indices;
     Vector invalid;
 #endif
