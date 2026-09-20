@@ -10,7 +10,7 @@ inline std::atomic<bool> stop{false};
 inline std::atomic<i32> num_games_reserved{0};
 inline std::atomic<i32> num_games_generated{0};
 inline i32 num_target_games;
-inline std::chrono::_V2::system_clock::time_point start_time;
+inline std::chrono::system_clock::time_point start_time;
 
 
 enum class Outcome : u8 { BLACK_WIN = 0, DRAW, WHITE_WIN, INVALID };
