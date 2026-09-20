@@ -154,7 +154,7 @@ jobs:
           echo "Network downloaded:"
           ls -lh "$NET_FILE"
 
-      - name: Build Raphael ARM64 NEON
+      - name: Preprocess NNUE network for ARM64 NEON
         shell: bash
         run: |
           set -e
@@ -163,6 +163,36 @@ jobs:
 
           NET_NAME="$(tr -d '\r\n' < network.txt)"
           NET_FILE="${NET_NAME}.nnue"
+
+          echo "Building host NNUE preprocessor..."
+          clang++ \
+            -std=c++20 \
+            -O2 \
+            -mavx2 \
+            -Isrc \
+            -DEVAL_NNUE \
+            -DEVAL_MULTILAYER \
+            src/eval/net/permute.cpp \
+            -o build/perm
+
+          echo "Preprocessing network for AVX2-compatible / NEON layout..."
+          ./build/perm "$NET_FILE"
+
+          echo "Processed network:"
+          ls -lh "$NET_FILE"
+
+      - name: Build Raphael Android ARM64 NEON
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p build
+
+          NET_NAME="$(tr -d '\r\n' < network.txt)"
+          NET_FILE="${NET_NAME}.nnue"
+          VERSION_BASE="$(tr -d '\r\n' < version.txt)"
+          COMMIT_SHA="$(git rev-parse --short HEAD)"
+          VERSION="${VERSION_BASE}-dev-${COMMIT_SHA}"
 
           CXXFLAGS=(
             -std=c++20
@@ -176,10 +206,7 @@ jobs:
             -Isrc
             -DEVAL_NNUE
             -DEVAL_MULTILAYER
-            -DUSE_NEON
-            -DUSE_SIMD=128
-            -DALIGNMENT=16
-            -DSIMD_REGS=8
+            "-DVERSION=\"${VERSION}\""
             "-DNETWORK_FILE=${NET_FILE}"
           )
 
@@ -191,13 +218,15 @@ jobs:
           echo
           echo "Network:"
           echo "$NET_FILE"
+          echo
+          echo "Version:"
+          echo "$VERSION"
           echo "========================================"
 
-          SOURCES=(
-            src/Raphael/*.cpp
-            src/eval/*.cpp
-            uci.cpp
+          mapfile -t SOURCES < <(
+            find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort
           )
+          SOURCES+=(uci.cpp)
 
           echo
           echo "Source files: ${#SOURCES[@]}"
