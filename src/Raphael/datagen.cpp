@@ -333,7 +333,7 @@ void generate_games(
          << "generated: 0 games (0.0000 games/sec)" << flush;
 
     // start generation threads
-    thread threads[concurrency];
+    vector<thread> threads(concurrency);
     for (int i = 0; i < concurrency; i++)
         threads[i] = thread(
             internal::generation_thread,
