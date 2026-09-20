@@ -80,8 +80,8 @@ static constexpr array<BitRays, 12> OUTGOING_THREATS = [] {
     lut[chess::Piece::BLACKBISHOP] = 0xFE'00'FE'00'FE'00'FE'00;
     lut[chess::Piece::WHITEROOK] = 0x00'FE'00'FE'00'FE'00'FE;
     lut[chess::Piece::BLACKROOK] = 0x00'FE'00'FE'00'FE'00'FE;
-    lut[chess::Piece::WHITEQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE;
-    lut[chess::Piece::BLACKQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE;
+    lut[chess::Piece::WHITEQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE'FE;
+    lut[chess::Piece::BLACKQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE'FE;
     lut[chess::Piece::WHITEKING] = 0;
     lut[chess::Piece::BLACKKING] = 0;
 
@@ -146,12 +146,12 @@ Vector Vector::flip() const {
 Vector Vector::load(const void* src) {
     const auto* ptr = static_cast<const u8*>(src);
 
-    return {
+    return {{
         load_u8(ptr + 0),
         load_u8(ptr + 16),
         load_u8(ptr + 32),
         load_u8(ptr + 48),
-    };
+    }};
 }
 
 void Vector::store_into(void* dst) const {
@@ -164,7 +164,12 @@ void Vector::store_into(void* dst) const {
 }
 
 Vector Vector::flip() const {
-    return {raw[2], raw[3], raw[0], raw[1]};
+    return {{
+        raw[2],
+        raw[3],
+        raw[0],
+        raw[1],
+    }};
 }
 
 BitRays Vector::to_mask() const {
@@ -173,7 +178,8 @@ BitRays Vector::to_mask() const {
 
     for (i32 r = 0; r < 4; ++r) {
         const auto top_bits = vshrq_n_u8(
-            vreinterpretq_u8_s8(raw[r].raw), 7
+            vreinterpretq_u8_s8(raw[r].raw),
+            7
         );
 
         vst1q_u8(bytes, top_bits);
@@ -327,39 +333,39 @@ BitRays incoming_attackers(
         internal::INCOMING_THREATS_MASK.data()
     );
 
-    Vector v{
-        {vreinterpretq_s8_u8(vcgtq_u8(
+    Vector v{{
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[0].raw),
                 vreinterpretq_u8_s8(mask.raw[0].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[1].raw),
                 vreinterpretq_u8_s8(mask.raw[1].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[2].raw),
                 vreinterpretq_u8_s8(mask.raw[2].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[3].raw),
                 vreinterpretq_u8_s8(mask.raw[3].raw)
             ),
             vdupq_n_u8(0)
-        ))}
-    };
+        ))
+    }};
 
     return v.to_mask() & closest;
 }
@@ -372,39 +378,39 @@ BitRays incoming_sliders(
         internal::INCOMING_SLIDER_MASK.data()
     );
 
-    Vector v{
-        {vreinterpretq_s8_u8(vcgtq_u8(
+    Vector v{{
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[0].raw),
                 vreinterpretq_u8_s8(mask.raw[0].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[1].raw),
                 vreinterpretq_u8_s8(mask.raw[1].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[2].raw),
                 vreinterpretq_u8_s8(mask.raw[2].raw)
             ),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vandq_u8(
                 vreinterpretq_u8_s8(bits.raw[3].raw),
                 vreinterpretq_u8_s8(mask.raw[3].raw)
             ),
             vdupq_n_u8(0)
-        ))}
-    };
+        ))
+    }};
 
     return v.to_mask()
            & closest
@@ -412,27 +418,27 @@ BitRays incoming_sliders(
 }
 
 BitRays closest_occupied(const Vector& bits) {
-    Vector v{
-        {vreinterpretq_s8_u8(vcgtq_u8(
+    Vector v{{
+        vreinterpretq_s8_u8(vcgtq_u8(
             vreinterpretq_u8_s8(bits.raw[0].raw),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vreinterpretq_u8_s8(bits.raw[1].raw),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vreinterpretq_u8_s8(bits.raw[2].raw),
             vdupq_n_u8(0)
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_s8_u8(vcgtq_u8(
             vreinterpretq_u8_s8(bits.raw[3].raw),
             vdupq_n_u8(0)
-        ))}
-    };
+        ))
+    }};
 
     const BitRays occupied = v.to_mask();
     const BitRays o =
@@ -449,27 +455,27 @@ Permutation permutation_for(chess::Square focus) {
 
     const auto bad = vdupq_n_u8(0x80);
 
-    const Vector invalid{
-        {vreinterpretq_s8_u8(vceqq_u8(
+    const Vector invalid{{
+        vreinterpretq_s8_u8(vceqq_u8(
             vreinterpretq_u8_s8(indices.raw[0].raw),
             bad
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_s8_u8(vceqq_u8(
             vreinterpretq_u8_s8(indices.raw[1].raw),
             bad
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_s8_u8(vceqq_u8(
             vreinterpretq_u8_s8(indices.raw[2].raw),
             bad
-        ))},
+        )),
 
-        {vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_s8_u8(vceqq_u8(
             vreinterpretq_u8_s8(indices.raw[3].raw),
             bad
-        ))}
-    };
+        ))
+    }};
 
     return {indices, invalid};
 }
@@ -488,46 +494,46 @@ pair<Vector, Vector> permute_mailbox(
         vreinterpretq_u8_s8(masked_mailbox.raw[3].raw),
     }};
 
-    const Vector permuted{
-        {vreinterpretq_s8_u8(
+    const Vector permuted{{
+        vreinterpretq_s8_u8(
             vqtbl4q_u8(
                 table,
                 vreinterpretq_u8_s8(
                     perm.indices.raw[0].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vqtbl4q_u8(
                 table,
                 vreinterpretq_u8_s8(
                     perm.indices.raw[1].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vqtbl4q_u8(
                 table,
                 vreinterpretq_u8_s8(
                     perm.indices.raw[2].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vqtbl4q_u8(
                 table,
                 vreinterpretq_u8_s8(
                     perm.indices.raw[3].raw
                 )
             )
-        )}
-    };
+        )
+    }};
 
-    const Vector bits{
-        {vreinterpretq_s8_u8(
+    const Vector bits{{
+        vreinterpretq_s8_u8(
             vbicq_u8(
                 vreinterpretq_u8_s8(
                     vqtbl1q_u8(
@@ -541,9 +547,9 @@ pair<Vector, Vector> permute_mailbox(
                     perm.invalid.raw[0].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vbicq_u8(
                 vreinterpretq_u8_s8(
                     vqtbl1q_u8(
@@ -557,9 +563,9 @@ pair<Vector, Vector> permute_mailbox(
                     perm.invalid.raw[1].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vbicq_u8(
                 vreinterpretq_u8_s8(
                     vqtbl1q_u8(
@@ -573,9 +579,9 @@ pair<Vector, Vector> permute_mailbox(
                     perm.invalid.raw[2].raw
                 )
             )
-        )},
+        ),
 
-        {vreinterpretq_s8_u8(
+        vreinterpretq_s8_u8(
             vbicq_u8(
                 vreinterpretq_u8_s8(
                     vqtbl1q_u8(
@@ -589,8 +595,8 @@ pair<Vector, Vector> permute_mailbox(
                     perm.invalid.raw[3].raw
                 )
             )
-        )}
-    };
+        )
+    }};
 
     return {permuted, bits};
 }
