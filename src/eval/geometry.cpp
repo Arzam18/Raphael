@@ -342,7 +342,7 @@ BitRays incoming_attackers(
 
     Vector v{};
 
-    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[0].raw),
             vreinterpretq_u8_s8(mask.raw[0].raw)
@@ -350,7 +350,7 @@ BitRays incoming_attackers(
         vdupq_n_u8(0)
     ));
 
-    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[1].raw),
             vreinterpretq_u8_s8(mask.raw[1].raw)
@@ -358,7 +358,7 @@ BitRays incoming_attackers(
         vdupq_n_u8(0)
     ));
 
-    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[2].raw),
             vreinterpretq_u8_s8(mask.raw[2].raw)
@@ -366,7 +366,7 @@ BitRays incoming_attackers(
         vdupq_n_u8(0)
     ));
 
-    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[3].raw),
             vreinterpretq_u8_s8(mask.raw[3].raw)
@@ -387,7 +387,7 @@ BitRays incoming_sliders(
 
     Vector v{};
 
-    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[0].raw),
             vreinterpretq_u8_s8(mask.raw[0].raw)
@@ -395,7 +395,7 @@ BitRays incoming_sliders(
         vdupq_n_u8(0)
     ));
 
-    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[1].raw),
             vreinterpretq_u8_s8(mask.raw[1].raw)
@@ -403,7 +403,7 @@ BitRays incoming_sliders(
         vdupq_n_u8(0)
     ));
 
-    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[2].raw),
             vreinterpretq_u8_s8(mask.raw[2].raw)
@@ -411,7 +411,7 @@ BitRays incoming_sliders(
         vdupq_n_u8(0)
     ));
 
-    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[3].raw),
             vreinterpretq_u8_s8(mask.raw[3].raw)
@@ -427,22 +427,22 @@ BitRays incoming_sliders(
 BitRays closest_occupied(const Vector& bits) {
     Vector v{};
 
-    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vreinterpretq_u8_s8(bits.raw[0].raw),
         vdupq_n_u8(0)
     ));
 
-    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vreinterpretq_u8_s8(bits.raw[1].raw),
         vdupq_n_u8(0)
     ));
 
-    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vreinterpretq_u8_s8(bits.raw[2].raw),
         vdupq_n_u8(0)
     ));
 
-    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vreinterpretq_u8_s8(bits.raw[3].raw),
         vdupq_n_u8(0)
     ));
@@ -464,22 +464,22 @@ Permutation permutation_for(chess::Square focus) {
 
     Vector invalid{};
 
-    invalid.raw[0] = vreinterpretq_s8_u8(vceqq_u8(
+    invalid.raw[0].raw = vreinterpretq_s8_u8(vceqq_u8(
         vreinterpretq_u8_s8(indices.raw[0].raw),
         bad
     ));
 
-    invalid.raw[1] = vreinterpretq_s8_u8(vceqq_u8(
+    invalid.raw[1].raw = vreinterpretq_s8_u8(vceqq_u8(
         vreinterpretq_u8_s8(indices.raw[1].raw),
         bad
     ));
 
-    invalid.raw[2] = vreinterpretq_s8_u8(vceqq_u8(
+    invalid.raw[2].raw = vreinterpretq_s8_u8(vceqq_u8(
         vreinterpretq_u8_s8(indices.raw[2].raw),
         bad
     ));
 
-    invalid.raw[3] = vreinterpretq_s8_u8(vceqq_u8(
+    invalid.raw[3].raw = vreinterpretq_s8_u8(vceqq_u8(
         vreinterpretq_u8_s8(indices.raw[3].raw),
         bad
     ));
@@ -503,7 +503,7 @@ pair<Vector, Vector> permute_mailbox(
 
     Vector permuted{};
 
-    permuted.raw[0] = vreinterpretq_s8_u8(
+    permuted.raw[0].raw = vreinterpretq_s8_u8(
         vqtbl4q_u8(
             table,
             vreinterpretq_u8_s8(
@@ -512,7 +512,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    permuted.raw[1] = vreinterpretq_s8_u8(
+    permuted.raw[1].raw = vreinterpretq_s8_u8(
         vqtbl4q_u8(
             table,
             vreinterpretq_u8_s8(
@@ -521,7 +521,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    permuted.raw[2] = vreinterpretq_s8_u8(
+    permuted.raw[2].raw = vreinterpretq_s8_u8(
         vqtbl4q_u8(
             table,
             vreinterpretq_u8_s8(
@@ -530,7 +530,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    permuted.raw[3] = vreinterpretq_s8_u8(
+    permuted.raw[3].raw = vreinterpretq_s8_u8(
         vqtbl4q_u8(
             table,
             vreinterpretq_u8_s8(
@@ -541,7 +541,7 @@ pair<Vector, Vector> permute_mailbox(
 
     Vector bits{};
 
-    bits.raw[0] = vreinterpretq_s8_u8(
+    bits.raw[0].raw = vreinterpretq_s8_u8(
         vbicq_u8(
             vreinterpretq_u8_s8(
                 vqtbl1q_u8(
@@ -557,7 +557,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    bits.raw[1] = vreinterpretq_s8_u8(
+    bits.raw[1].raw = vreinterpretq_s8_u8(
         vbicq_u8(
             vreinterpretq_u8_s8(
                 vqtbl1q_u8(
@@ -573,7 +573,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    bits.raw[2] = vreinterpretq_s8_u8(
+    bits.raw[2].raw = vreinterpretq_s8_u8(
         vbicq_u8(
             vreinterpretq_u8_s8(
                 vqtbl1q_u8(
@@ -589,7 +589,7 @@ pair<Vector, Vector> permute_mailbox(
         )
     );
 
-    bits.raw[3] = vreinterpretq_s8_u8(
+    bits.raw[3].raw = vreinterpretq_s8_u8(
         vbicq_u8(
             vreinterpretq_u8_s8(
                 vqtbl1q_u8(
