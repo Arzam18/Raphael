@@ -1,0 +1,157 @@
+name: Raphael Android ARM64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Android NDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-24
+            build-tools;35.0.0
+            ndk;27.2.12479018
+
+      - name: Show toolchain
+        shell: bash
+        run: |
+          set -e
+
+          export NDK="$ANDROID_NDK_ROOT"
+          export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+
+          "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" --version
+
+      - name: Download NNUE network
+        shell: bash
+        run: |
+          set -e
+
+          NET_NAME="$(tr -d '\r\n' < network.txt)"
+          NET_FILE="${NET_NAME}.nnue"
+
+          echo "Network: $NET_NAME"
+          echo "File: $NET_FILE"
+
+          curl -fL \
+            "https://github.com/Orbital-Web/Raphael-Net/releases/download/${NET_NAME}/${NET_FILE}" \
+            -o "$NET_FILE"
+
+          test -s "$NET_FILE"
+
+          ls -lh "$NET_FILE"
+
+      - name: Build Raphael ARM64 NEON
+        shell: bash
+        run: |
+          set -e
+
+          export NDK="$ANDROID_NDK_ROOT"
+          export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+          export CXX="$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
+
+          mkdir -p build
+
+          NET_NAME="$(tr -d '\r\n' < network.txt)"
+          NET_FILE="${NET_NAME}.nnue"
+
+          CXXFLAGS="
+            -std=c++20
+            -O3
+            -flto
+            -march=armv8-a
+            -fPIC
+            -pthread
+            -Wall
+            -Wextra
+            -Isrc
+            -DEVAL_NNUE
+            -DEVAL_MULTILAYER
+            -DUSE_NEON
+            -DUSE_SIMD=128
+            -DALIGNMENT=16
+            -DSIMD_REGS=8
+            -DNETWORK_FILE=${NET_FILE}
+          "
+
+          echo "========================================"
+          echo "Raphael Android ARM64 NEON"
+          echo "Compiler: $CXX"
+          echo "Network:  $NET_FILE"
+          echo "========================================"
+
+          SOURCES=(
+            src/Raphael/*.cpp
+            src/eval/*.cpp
+            uci.cpp
+          )
+
+          echo "Compiling ${#SOURCES[@]} source files..."
+
+          for src in "${SOURCES[@]}"; do
+            obj="build/$(basename "${src%.cpp}").o"
+
+            echo "Compiling: $src"
+
+            "$CXX" $CXXFLAGS \
+              -c "$src" \
+              -o "$obj"
+          done
+
+          echo "Linking..."
+
+          "$CXX" \
+            -O3 \
+            -flto \
+            -march=armv8-a \
+            -pthread \
+            -fuse-ld=lld \
+            -static-libstdc++ \
+            -Wl,--gc-sections \
+            build/*.o \
+            -o build/raphael-android-arm64
+
+          echo "========================================"
+          echo "BUILD SUCCESS"
+          echo "========================================"
+
+          file build/raphael-android-arm64
+          ls -lh build/raphael-android-arm64
+
+      - name: Check Android binary
+        shell: bash
+        run: |
+          set -e
+
+          BINARY="build/raphael-android-arm64"
+
+          echo "Checking ELF..."
+
+          file "$BINARY"
+
+          echo
+          echo "Dynamic dependencies:"
+          "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf" \
+            -d "$BINARY" || true
+
+          echo
+          echo "NEON compilation marker:"
+          "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" \
+            -march=armv8-a \
+            -dM \
+            -E \
+            -x c++ /dev/null | grep -E "__aarch64__|__ARM_NEON" || true
+
+      - name: Upload Android engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: raphael-android-arm64
+          path: build/raphael-android-arm64
+          if-no-files-found: error
