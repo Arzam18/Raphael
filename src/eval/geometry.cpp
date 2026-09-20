@@ -82,8 +82,8 @@ static constexpr array<BitRays, 12> OUTGOING_THREATS = [] {
     lut[chess::Piece::BLACKBISHOP] = 0xFE'00'FE'00'FE'00'FE'00;
     lut[chess::Piece::WHITEROOK] = 0x00'FE'00'FE'00'FE'00'FE;
     lut[chess::Piece::BLACKROOK] = 0x00'FE'00'FE'00'FE'00'FE;
-    lut[chess::Piece::WHITEQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE'FE;
-    lut[chess::Piece::BLACKQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE'FE;
+    lut[chess::Piece::WHITEQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE;
+    lut[chess::Piece::BLACKQUEEN] = 0xFE'FE'FE'FE'FE'FE'FE'FE;
     lut[chess::Piece::WHITEKING] = 0;
     lut[chess::Piece::BLACKKING] = 0;
 
@@ -406,7 +406,7 @@ BitRays incoming_sliders(
     v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[2].raw),
-            vdupq_n_u8(0)
+            vreinterpretq_u8_s8(mask.raw[2].raw)
         ),
         vdupq_n_u8(0)
     ));
