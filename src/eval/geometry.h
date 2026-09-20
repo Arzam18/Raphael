@@ -14,7 +14,7 @@ using Bit = u8;       // piece type
 using BitRays = u64;  // a bitboard-like structure encoding ray directions and steps
 
 
-// byteboard mailbox representation encoding which pieces are on which square, using a byte per sq
+// byteboard mailbox representation encoding which pieces are on each square, using a byte per sq
 struct Vector {
 #ifdef USE_AVX512
     VecU8 raw;
@@ -141,7 +141,9 @@ struct Permutation {
  * \returns the piece types and piece bits permuted into ray space
  */
 [[nodiscard]] std::pair<Vector, Vector> permute_mailbox(
-    const Permutation& perm, std::span<const chess::Piece, 64> mailbox, chess::Square ignore
+    const Permutation& perm,
+    std::span<const chess::Piece, 64> mailbox,
+    chess::Square ignore
 );
 }  // namespace raphael::nnue::geometry
 #endif
