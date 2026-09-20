@@ -40,8 +40,10 @@ static constexpr MultiArray<u8, 64, 64> PERMUTATIONS = [] {
         for (u8 i = 0; i < 64; i++) {
             const u8 wide_focus = focus + (focus & 0x38);
             const u8 wide_result = wide_focus + OFFSETS[i];
-            const u8 result = ((wide_result & 0x70) >> 1) | (wide_result & 0x07);
+            const u8 result =
+                ((wide_result & 0x70) >> 1) | (wide_result & 0x07);
             const bool is_valid = (wide_result & 0x88) == 0;
+
             perm[focus][i] = (is_valid) ? result : 0x80;
         }
     }
@@ -129,6 +131,7 @@ static constexpr array<Bit, 64> INCOMING_SLIDER_MASK = [] {
 
 
 #ifdef USE_AVX512
+
 Vector Vector::load(const void* src) {
     return {_mm512_loadu_si512(src)};
 }
@@ -146,12 +149,14 @@ Vector Vector::flip() const {
 Vector Vector::load(const void* src) {
     const auto* ptr = static_cast<const u8*>(src);
 
-    return {{
-        load_u8(ptr + 0),
-        load_u8(ptr + 16),
-        load_u8(ptr + 32),
-        load_u8(ptr + 48),
-    }};
+    Vector result{};
+
+    result.raw[0] = load_u8(ptr + 0);
+    result.raw[1] = load_u8(ptr + 16);
+    result.raw[2] = load_u8(ptr + 32);
+    result.raw[3] = load_u8(ptr + 48);
+
+    return result;
 }
 
 void Vector::store_into(void* dst) const {
@@ -164,12 +169,14 @@ void Vector::store_into(void* dst) const {
 }
 
 Vector Vector::flip() const {
-    return {{
-        raw[2],
-        raw[3],
-        raw[0],
-        raw[1],
-    }};
+    Vector result{};
+
+    result.raw[0] = raw[2];
+    result.raw[1] = raw[3];
+    result.raw[2] = raw[0];
+    result.raw[3] = raw[1];
+
+    return result;
 }
 
 BitRays Vector::to_mask() const {
@@ -333,39 +340,39 @@ BitRays incoming_attackers(
         internal::INCOMING_THREATS_MASK.data()
     );
 
-    Vector v{{
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[0].raw),
-                vreinterpretq_u8_s8(mask.raw[0].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    Vector v{};
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[1].raw),
-                vreinterpretq_u8_s8(mask.raw[1].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[0].raw),
+            vreinterpretq_u8_s8(mask.raw[0].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[2].raw),
-                vreinterpretq_u8_s8(mask.raw[2].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[1].raw),
+            vreinterpretq_u8_s8(mask.raw[1].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[3].raw),
-                vreinterpretq_u8_s8(mask.raw[3].raw)
-            ),
-            vdupq_n_u8(0)
-        ))
-    }};
+    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[2].raw),
+            vreinterpretq_u8_s8(mask.raw[2].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[3].raw),
+            vreinterpretq_u8_s8(mask.raw[3].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
     return v.to_mask() & closest;
 }
@@ -378,39 +385,39 @@ BitRays incoming_sliders(
         internal::INCOMING_SLIDER_MASK.data()
     );
 
-    Vector v{{
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[0].raw),
-                vreinterpretq_u8_s8(mask.raw[0].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    Vector v{};
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[1].raw),
-                vreinterpretq_u8_s8(mask.raw[1].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[0].raw),
+            vreinterpretq_u8_s8(mask.raw[0].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[2].raw),
-                vreinterpretq_u8_s8(mask.raw[2].raw)
-            ),
-            vdupq_n_u8(0)
-        )),
+    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[1].raw),
+            vreinterpretq_u8_s8(mask.raw[1].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vandq_u8(
-                vreinterpretq_u8_s8(bits.raw[3].raw),
-                vreinterpretq_u8_s8(mask.raw[3].raw)
-            ),
-            vdupq_n_u8(0)
-        ))
-    }};
+    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[2].raw),
+            vreinterpretq_u8_s8(mask.raw[2].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[3].raw),
+            vreinterpretq_u8_s8(mask.raw[3].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
 
     return v.to_mask()
            & closest
@@ -418,27 +425,27 @@ BitRays incoming_sliders(
 }
 
 BitRays closest_occupied(const Vector& bits) {
-    Vector v{{
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vreinterpretq_u8_s8(bits.raw[0].raw),
-            vdupq_n_u8(0)
-        )),
+    Vector v{};
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vreinterpretq_u8_s8(bits.raw[1].raw),
-            vdupq_n_u8(0)
-        )),
+    v.raw[0] = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[0].raw),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vreinterpretq_u8_s8(bits.raw[2].raw),
-            vdupq_n_u8(0)
-        )),
+    v.raw[1] = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[1].raw),
+        vdupq_n_u8(0)
+    ));
 
-        vreinterpretq_s8_u8(vcgtq_u8(
-            vreinterpretq_u8_s8(bits.raw[3].raw),
-            vdupq_n_u8(0)
-        ))
-    }};
+    v.raw[2] = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[2].raw),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3] = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[3].raw),
+        vdupq_n_u8(0)
+    ));
 
     const BitRays occupied = v.to_mask();
     const BitRays o =
@@ -455,27 +462,27 @@ Permutation permutation_for(chess::Square focus) {
 
     const auto bad = vdupq_n_u8(0x80);
 
-    const Vector invalid{{
-        vreinterpretq_s8_u8(vceqq_u8(
-            vreinterpretq_u8_s8(indices.raw[0].raw),
-            bad
-        )),
+    Vector invalid{};
 
-        vreinterpretq_s8_u8(vceqq_u8(
-            vreinterpretq_u8_s8(indices.raw[1].raw),
-            bad
-        )),
+    invalid.raw[0] = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[0].raw),
+        bad
+    ));
 
-        vreinterpretq_s8_u8(vceqq_u8(
-            vreinterpretq_u8_s8(indices.raw[2].raw),
-            bad
-        )),
+    invalid.raw[1] = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[1].raw),
+        bad
+    ));
 
-        vreinterpretq_s8_u8(vceqq_u8(
-            vreinterpretq_u8_s8(indices.raw[3].raw),
-            bad
-        ))
-    }};
+    invalid.raw[2] = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[2].raw),
+        bad
+    ));
+
+    invalid.raw[3] = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[3].raw),
+        bad
+    ));
 
     return {indices, invalid};
 }
@@ -494,109 +501,109 @@ pair<Vector, Vector> permute_mailbox(
         vreinterpretq_u8_s8(masked_mailbox.raw[3].raw),
     }};
 
-    const Vector permuted{{
-        vreinterpretq_s8_u8(
-            vqtbl4q_u8(
-                table,
-                vreinterpretq_u8_s8(
-                    perm.indices.raw[0].raw
-                )
-            )
-        ),
+    Vector permuted{};
 
-        vreinterpretq_s8_u8(
-            vqtbl4q_u8(
-                table,
-                vreinterpretq_u8_s8(
-                    perm.indices.raw[1].raw
-                )
-            )
-        ),
-
-        vreinterpretq_s8_u8(
-            vqtbl4q_u8(
-                table,
-                vreinterpretq_u8_s8(
-                    perm.indices.raw[2].raw
-                )
-            )
-        ),
-
-        vreinterpretq_s8_u8(
-            vqtbl4q_u8(
-                table,
-                vreinterpretq_u8_s8(
-                    perm.indices.raw[3].raw
-                )
+    permuted.raw[0] = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[0].raw
             )
         )
-    }};
+    );
 
-    const Vector bits{{
-        vreinterpretq_s8_u8(
-            vbicq_u8(
-                vreinterpretq_u8_s8(
-                    vqtbl1q_u8(
-                        lut,
-                        vreinterpretq_u8_s8(
-                            permuted.raw[0].raw
-                        )
-                    )
-                ),
-                vreinterpretq_u8_s8(
-                    perm.invalid.raw[0].raw
-                )
-            )
-        ),
-
-        vreinterpretq_s8_u8(
-            vbicq_u8(
-                vreinterpretq_u8_s8(
-                    vqtbl1q_u8(
-                        lut,
-                        vreinterpretq_u8_s8(
-                            permuted.raw[1].raw
-                        )
-                    )
-                ),
-                vreinterpretq_u8_s8(
-                    perm.invalid.raw[1].raw
-                )
-            )
-        ),
-
-        vreinterpretq_s8_u8(
-            vbicq_u8(
-                vreinterpretq_u8_s8(
-                    vqtbl1q_u8(
-                        lut,
-                        vreinterpretq_u8_s8(
-                            permuted.raw[2].raw
-                        )
-                    )
-                ),
-                vreinterpretq_u8_s8(
-                    perm.invalid.raw[2].raw
-                )
-            )
-        ),
-
-        vreinterpretq_s8_u8(
-            vbicq_u8(
-                vreinterpretq_u8_s8(
-                    vqtbl1q_u8(
-                        lut,
-                        vreinterpretq_u8_s8(
-                            permuted.raw[3].raw
-                        )
-                    )
-                ),
-                vreinterpretq_u8_s8(
-                    perm.invalid.raw[3].raw
-                )
+    permuted.raw[1] = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[1].raw
             )
         )
-    }};
+    );
+
+    permuted.raw[2] = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[2].raw
+            )
+        )
+    );
+
+    permuted.raw[3] = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[3].raw
+            )
+        )
+    );
+
+    Vector bits{};
+
+    bits.raw[0] = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[0].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[0].raw
+            )
+        )
+    );
+
+    bits.raw[1] = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[1].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[1].raw
+            )
+        )
+    );
+
+    bits.raw[2] = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[2].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[2].raw
+            )
+        )
+    );
+
+    bits.raw[3] = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[3].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[3].raw
+            )
+        )
+    );
 
     return {permuted, bits};
 }
