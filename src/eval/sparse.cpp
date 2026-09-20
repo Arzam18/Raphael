@@ -50,7 +50,7 @@ void SparseIterator::add_nonzeros(VecU8 l0_out0, VecU8 l0_out1) {
             )
         );
 
-    store_i16(&indices_[count_], idxs);
+    store_i16(reinterpret_cast<i16*>(&indices_[count_]), idxs);
 
     offset_ = add_i16(
         offset_,
