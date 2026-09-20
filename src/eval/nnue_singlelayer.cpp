@@ -55,7 +55,8 @@ i32 Nnue::evaluate(const chess::Board& board) {
     const VecI16 zs = zero_i16();
     const VecI16 qa = full_i16(QA);
 
-    VecI32 sum = zero_i16();
+    VecI32 sum = zero_i32();
+
     for (i32 i = 0; i < n_chunks; i++) {
         const VecI16 stm_psq0 = load_i16(&stm_acc_psq[i * regw16]);
         const VecI16 stm_psq1 = load_i16(&stm_acc_psq[i * regw16 + n_pairs]);
@@ -97,6 +98,7 @@ i32 Nnue::evaluate(const chess::Board& board) {
         eval += params->W1[bucket_idx][i + n_pairs] * ntm_v0 * ntm_v1;
     }
 #endif
+
     eval *= OUTPUT_SCALE;
     eval /= (QA * QA * QB);
     return static_cast<i32>(eval);
