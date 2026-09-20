@@ -406,7 +406,7 @@ BitRays incoming_sliders(
     v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
         vandq_u8(
             vreinterpretq_u8_s8(bits.raw[2].raw),
-            vreinterpretq_u8_s8(mask.raw[2].raw)
+            vdupq_n_u8(0)
         ),
         vdupq_n_u8(0)
     ));
