@@ -208,8 +208,10 @@ void TranspositionTable::allocate(usize newsize) {
     assert(table_ == nullptr);
     assert(capacity_ == 0);
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__ANDROID__)
     static constexpr usize page_size = 2 * 1024 * 1024;
+#elif defined(_WIN32)
+    static constexpr usize page_size = 4096;
 #else
     static constexpr usize page_size = 4096;
 #endif
@@ -217,14 +219,19 @@ void TranspositionTable::allocate(usize newsize) {
     const usize newsize_s = ((newsize * CLUSTER_SIZE + page_size - 1) / page_size) * page_size;
     capacity_ = newsize_s / CLUSTER_SIZE;
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__ANDROID__)
     table_ = static_cast<Cluster*>(aligned_alloc(page_size, newsize_s));
     madvise(table_, newsize_s, MADV_HUGEPAGE);
 #elif defined(_WIN32)
     table_ = static_cast<Cluster*>(_aligned_malloc(newsize_s, page_size));
 #else
-    table_ = static_cast<Cluster*>(aligned_alloc(page_size, newsize_s));
+    void* ptr = nullptr;
+    const int result = posix_memalign(&ptr, page_size, newsize_s);
+    assert(result == 0);
+    table_ = static_cast<Cluster*>(ptr);
 #endif
+
+    assert(table_ != nullptr);
 }
 
 void TranspositionTable::deallocate() {
