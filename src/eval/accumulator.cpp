@@ -38,7 +38,7 @@ static constexpr i32 PIECE_TARGET_COUNT[6] = {6, 10, 8, 8, 10, 0};  // num inclu
     return idx;
 }
 
-static constexpr auto PIECE_INDICES = [] {
+static const auto PIECE_INDICES = [] {
     MultiArray<u8, 12, 64, 64> dst{};
 
     // white and black pawns have different attacks, other pieces are symmetric
@@ -54,7 +54,7 @@ static constexpr auto PIECE_INDICES = [] {
     return dst;
 }();
 
-static constexpr auto OFFSETS = [] {
+static const auto OFFSETS = [] {
     // indices[piece] = {total num squares this piece can attack, global piece threat offset}
     // offsets[piece][from] = global offset for attacker, attacker square features
     struct {
@@ -84,7 +84,7 @@ static constexpr auto OFFSETS = [] {
     return dst;
 }();
 
-static constexpr auto ATTACK_INDICES = [] {
+static const auto ATTACK_INDICES = [] {
     // indices[attacker][attacked][forwards] = global threat index offset
     MultiArray<i32, 12, 12, 2> dst{};
 
