@@ -1,6 +1,7 @@
 name: Raphael Android ARM64
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
@@ -11,46 +12,107 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK environment
+        shell: bash
+        run: |
+          set -e
+
+          if [ -n "${ANDROID_HOME:-}" ]; then
+            SDK_ROOT="$ANDROID_HOME"
+          elif [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+            SDK_ROOT="$ANDROID_SDK_ROOT"
+          else
+            SDK_ROOT="/usr/local/lib/android/sdk"
+          fi
+
+          echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+          echo "Android SDK:"
+          echo "$SDK_ROOT"
+
+          find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f 2>/dev/null || true
 
       - name: Install Android SDK packages
         shell: bash
         run: |
           set -e
 
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" \
+            -name sdkmanager \
+            -type f \
+            | sort \
+            | tail -n 1)"
 
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager not found"
+            exit 1
           fi
 
-          echo "Using sdkmanager:"
+          echo "Using:"
           echo "$SDKMANAGER"
+
+          chmod +x "$SDKMANAGER"
+
+          echo "Accepting Android licenses..."
 
           yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
 
-          "$SDKMANAGER" "platforms;android-24"
-          "$SDKMANAGER" "build-tools;35.0.0"
-          "$SDKMANAGER" "ndk;27.2.12479018"
+          echo "Installing Android platform..."
+
+          "$SDKMANAGER" \
+            --sdk_root="$SDK_ROOT" \
+            "platforms;android-24"
+
+          echo "Installing build tools..."
+
+          "$SDKMANAGER" \
+            --sdk_root="$SDK_ROOT" \
+            "build-tools;35.0.0"
+
+          echo "Installing Android NDK..."
+
+          "$SDKMANAGER" \
+            --sdk_root="$SDK_ROOT" \
+            "ndk;27.2.12479018"
 
           echo
-          echo "Installed SDK packages:"
-          "$SDKMANAGER" --list_installed | grep -E \
-            "platforms;android-24|build-tools;35.0.0|ndk;27.2.12479018" || true
+          echo "Installed packages:"
+          "$SDKMANAGER" \
+            --sdk_root="$SDK_ROOT" \
+            --list_installed || true
 
-      - name: Show toolchain
+      - name: Configure NDK
         shell: bash
         run: |
           set -e
 
-          export NDK="$ANDROID_NDK_ROOT"
-          export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+          NDK="$SDK_ROOT/ndk/27.2.12479018"
+          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
 
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
-          echo "NDK=$NDK"
-          echo "TOOLCHAIN=$TOOLCHAIN"
+          if [ ! -d "$NDK" ]; then
+            echo "ERROR: NDK was not installed"
+            exit 1
+          fi
+
+          if [ ! -x "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" ]; then
+            echo "ERROR: AArch64 Android compiler not found"
+            exit 1
+          fi
+
+          echo "ANDROID_NDK_ROOT=$NDK" >> "$GITHUB_ENV"
+          echo "NDK=$NDK" >> "$GITHUB_ENV"
+          echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
+          echo "CXX=$TOOLCHAIN/bin/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
+
+          echo "========================================"
+          echo "NDK:"
+          echo "$NDK"
+          echo
+          echo "Compiler:"
+          echo "$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
+          echo "========================================"
 
           "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" --version
 
@@ -71,6 +133,8 @@ jobs:
 
           test -s "$NET_FILE"
 
+          echo
+          echo "Network downloaded:"
           ls -lh "$NET_FILE"
 
       - name: Build Raphael ARM64 NEON
@@ -78,16 +142,12 @@ jobs:
         run: |
           set -e
 
-          export NDK="$ANDROID_NDK_ROOT"
-          export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
-          export CXX="$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
-
           mkdir -p build
 
           NET_NAME="$(tr -d '\r\n' < network.txt)"
           NET_FILE="${NET_NAME}.nnue"
 
-          CXXFLAGS="
+          CXXFLAGS=(
             -std=c++20
             -O3
             -flto
@@ -103,13 +163,20 @@ jobs:
             -DUSE_SIMD=128
             -DALIGNMENT=16
             -DSIMD_REGS=8
-            -DNETWORK_FILE=${NET_FILE}
-          "
+            "-DNETWORK_FILE=${NET_FILE}"
+          )
 
           echo "========================================"
           echo "Raphael Android ARM64 NEON"
-          echo "Compiler: $CXX"
-          echo "Network:  $NET_FILE"
+          echo "========================================"
+          echo "Compiler:"
+          echo "$CXX"
+          echo
+          echo "Network:"
+          echo "$NET_FILE"
+          echo
+          echo "Flags:"
+          printf '%s\n' "${CXXFLAGS[@]}"
           echo "========================================"
 
           SOURCES=(
@@ -118,21 +185,30 @@ jobs:
             uci.cpp
           )
 
-          echo "Compiling ${#SOURCES[@]} source files..."
+          echo
+          echo "Source files: ${#SOURCES[@]}"
+          echo
 
           for src in "${SOURCES[@]}"; do
-            obj="build/$(basename "${src%.cpp}").o"
+            name="$(echo "$src" | tr '/' '_')"
+            obj="build/${name%.cpp}.o"
 
             echo "----------------------------------------"
-            echo "Compiling: $src"
+            echo "Compiling:"
+            echo "$src"
+            echo "Object:"
+            echo "$obj"
 
-            "$CXX" $CXXFLAGS \
+            "$CXX" \
+              "${CXXFLAGS[@]}" \
               -c "$src" \
               -o "$obj"
           done
 
-          echo "----------------------------------------"
-          echo "Linking..."
+          echo
+          echo "========================================"
+          echo "Linking Raphael..."
+          echo "========================================"
 
           "$CXX" \
             -O3 \
@@ -145,6 +221,7 @@ jobs:
             build/*.o \
             -o build/raphael-android-arm64
 
+          echo
           echo "========================================"
           echo "BUILD SUCCESS"
           echo "========================================"
@@ -152,13 +229,13 @@ jobs:
           file build/raphael-android-arm64
           ls -lh build/raphael-android-arm64
 
-      - name: Check Android binary
+      - name: Check Android ELF
         shell: bash
         run: |
           set -e
 
           BINARY="build/raphael-android-arm64"
-          LLVM_READELF="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+          READELF="$TOOLCHAIN/bin/llvm-readelf"
 
           echo "========================================"
           echo "ELF INFORMATION"
@@ -168,12 +245,17 @@ jobs:
 
           echo
           echo "Dynamic dependencies:"
-          "$LLVM_READELF" -d "$BINARY" || true
+          "$READELF" -d "$BINARY" || true
 
           echo
-          echo "NEON / AArch64 compiler macros:"
+          echo "Architecture:"
+          "$READELF" -h "$BINARY" | grep -E \
+            "Class:|Machine:|Type:" || true
 
-          "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" \
+          echo
+          echo "NEON/AArch64 compiler macros:"
+
+          "$CXX" \
             -march=armv8-a \
             -dM \
             -E \
