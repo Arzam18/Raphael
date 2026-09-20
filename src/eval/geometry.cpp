@@ -1,4 +1,5 @@
 #ifdef EVAL_NNUE
+#include <algorithm>
 #include <eval/geometry.h>
 
 using std::array;
