@@ -164,7 +164,7 @@ void Vector::store_into(void* dst) const {
 }
 
 Vector Vector::flip() const {
-    return {raw[3], raw[2], raw[1], raw[0]};
+    return {raw[2], raw[3], raw[0], raw[1]};
 }
 
 BitRays Vector::to_mask() const {
