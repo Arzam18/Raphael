@@ -11,13 +11,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Android NDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-24
-            build-tools;35.0.0
-            ndk;27.2.12479018
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          set -e
+
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          fi
+
+          echo "Using sdkmanager:"
+          echo "$SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+
+          "$SDKMANAGER" "platforms;android-24"
+          "$SDKMANAGER" "build-tools;35.0.0"
+          "$SDKMANAGER" "ndk;27.2.12479018"
+
+          echo
+          echo "Installed SDK packages:"
+          "$SDKMANAGER" --list_installed | grep -E \
+            "platforms;android-24|build-tools;35.0.0|ndk;27.2.12479018" || true
 
       - name: Show toolchain
         shell: bash
@@ -26,6 +46,11 @@ jobs:
 
           export NDK="$ANDROID_NDK_ROOT"
           export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
+          echo "NDK=$NDK"
+          echo "TOOLCHAIN=$TOOLCHAIN"
 
           "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" --version
 
@@ -98,6 +123,7 @@ jobs:
           for src in "${SOURCES[@]}"; do
             obj="build/$(basename "${src%.cpp}").o"
 
+            echo "----------------------------------------"
             echo "Compiling: $src"
 
             "$CXX" $CXXFLAGS \
@@ -105,6 +131,7 @@ jobs:
               -o "$obj"
           done
 
+          echo "----------------------------------------"
           echo "Linking..."
 
           "$CXX" \
@@ -131,23 +158,27 @@ jobs:
           set -e
 
           BINARY="build/raphael-android-arm64"
+          LLVM_READELF="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
 
-          echo "Checking ELF..."
+          echo "========================================"
+          echo "ELF INFORMATION"
+          echo "========================================"
 
           file "$BINARY"
 
           echo
           echo "Dynamic dependencies:"
-          "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf" \
-            -d "$BINARY" || true
+          "$LLVM_READELF" -d "$BINARY" || true
 
           echo
-          echo "NEON compilation marker:"
+          echo "NEON / AArch64 compiler macros:"
+
           "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" \
             -march=armv8-a \
             -dM \
             -E \
-            -x c++ /dev/null | grep -E "__aarch64__|__ARM_NEON" || true
+            -x c++ /dev/null \
+            | grep -E "__aarch64__|__ARM_NEON" || true
 
       - name: Upload Android engine
         uses: actions/upload-artifact@v4
