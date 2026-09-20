@@ -355,7 +355,7 @@ inline void store_i32(i32* dst, VecI32 src) {
         chi
     );
 
-    const auto sums = vaddq_s32(
+    const auto sums = vpaddq_s32(
         vpaddlq_s16(plo),
         vpaddlq_s16(phi)
     );
