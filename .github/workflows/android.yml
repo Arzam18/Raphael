@@ -32,7 +32,10 @@ jobs:
           echo "Android SDK:"
           echo "$SDK_ROOT"
 
-          find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f 2>/dev/null || true
+          find "$SDK_ROOT/cmdline-tools" \
+            -name sdkmanager \
+            -type f \
+            -print
 
       - name: Install Android SDK packages
         shell: bash
@@ -50,27 +53,37 @@ jobs:
             exit 1
           fi
 
-          echo "Using:"
+          echo "Using sdkmanager:"
           echo "$SDKMANAGER"
 
-          chmod +x "$SDKMANAGER"
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager exists but is not executable"
+            ls -l "$SDKMANAGER"
+            exit 1
+          fi
 
+          echo
           echo "Accepting Android licenses..."
 
-          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          yes | "$SDKMANAGER" \
+            --sdk_root="$SDK_ROOT" \
+            --licenses >/dev/null 2>&1 || true
 
+          echo
           echo "Installing Android platform..."
 
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             "platforms;android-24"
 
+          echo
           echo "Installing build tools..."
 
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             "build-tools;35.0.0"
 
+          echo
           echo "Installing Android NDK..."
 
           "$SDKMANAGER" \
@@ -78,7 +91,7 @@ jobs:
             "ndk;27.2.12479018"
 
           echo
-          echo "Installed packages:"
+          echo "Installed Android packages:"
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             --list_installed || true
@@ -92,29 +105,33 @@ jobs:
           TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
 
           if [ ! -d "$NDK" ]; then
-            echo "ERROR: NDK was not installed"
+            echo "ERROR: NDK was not installed:"
+            echo "$NDK"
             exit 1
           fi
 
-          if [ ! -x "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" ]; then
-            echo "ERROR: AArch64 Android compiler not found"
+          CXX="$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
+
+          if [ ! -x "$CXX" ]; then
+            echo "ERROR: AArch64 Android compiler not found:"
+            echo "$CXX"
             exit 1
           fi
 
           echo "ANDROID_NDK_ROOT=$NDK" >> "$GITHUB_ENV"
           echo "NDK=$NDK" >> "$GITHUB_ENV"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
-          echo "CXX=$TOOLCHAIN/bin/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
+          echo "CXX=$CXX" >> "$GITHUB_ENV"
 
           echo "========================================"
           echo "NDK:"
           echo "$NDK"
           echo
           echo "Compiler:"
-          echo "$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
+          echo "$CXX"
           echo "========================================"
 
-          "$TOOLCHAIN/bin/aarch64-linux-android24-clang++" --version
+          "$CXX" --version
 
       - name: Download NNUE network
         shell: bash
@@ -174,9 +191,6 @@ jobs:
           echo
           echo "Network:"
           echo "$NET_FILE"
-          echo
-          echo "Flags:"
-          printf '%s\n' "${CXXFLAGS[@]}"
           echo "========================================"
 
           SOURCES=(
@@ -194,10 +208,8 @@ jobs:
             obj="build/${name%.cpp}.o"
 
             echo "----------------------------------------"
-            echo "Compiling:"
-            echo "$src"
-            echo "Object:"
-            echo "$obj"
+            echo "Compiling: $src"
+            echo "Object:    $obj"
 
             "$CXX" \
               "${CXXFLAGS[@]}" \
@@ -244,16 +256,16 @@ jobs:
           file "$BINARY"
 
           echo
-          echo "Dynamic dependencies:"
-          "$READELF" -d "$BINARY" || true
-
-          echo
           echo "Architecture:"
           "$READELF" -h "$BINARY" | grep -E \
             "Class:|Machine:|Type:" || true
 
           echo
-          echo "NEON/AArch64 compiler macros:"
+          echo "Dynamic dependencies:"
+          "$READELF" -d "$BINARY" || true
+
+          echo
+          echo "AArch64 / NEON compiler macros:"
 
           "$CXX" \
             -march=armv8-a \
