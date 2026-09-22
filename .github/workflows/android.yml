@@ -1,4 +1,4 @@
-name: Raphael Android ARM64
+name: Raphael Android ARM64 NEON Diagnostic
 
 on:
   push:
@@ -9,9 +9,15 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      # ------------------------------------------------------------
+      # CHECKOUT
+      # ------------------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------
+      # ANDROID SDK
+      # ------------------------------------------------------------
       - name: Setup Android SDK environment
         shell: bash
         run: |
@@ -37,6 +43,9 @@ jobs:
             -type f \
             -print
 
+      # ------------------------------------------------------------
+      # INSTALL ANDROID TOOLCHAIN
+      # ------------------------------------------------------------
       - name: Install Android SDK packages
         shell: bash
         run: |
@@ -53,50 +62,41 @@ jobs:
             exit 1
           fi
 
-          echo "Using sdkmanager:"
-          echo "$SDKMANAGER"
-
           if [ ! -x "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager exists but is not executable"
+            echo "ERROR: sdkmanager is not executable"
             ls -l "$SDKMANAGER"
             exit 1
           fi
 
-          echo
-          echo "Accepting Android licenses..."
+          echo "Using:"
+          echo "$SDKMANAGER"
 
           yes | "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             --licenses >/dev/null 2>&1 || true
 
-          echo
-          echo "Installing Android platform..."
-
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             "platforms;android-24"
 
-          echo
-          echo "Installing build tools..."
-
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             "build-tools;35.0.0"
-
-          echo
-          echo "Installing Android NDK..."
 
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             "ndk;27.2.12479018"
 
           echo
-          echo "Installed Android packages:"
+          echo "Installed packages:"
           "$SDKMANAGER" \
             --sdk_root="$SDK_ROOT" \
             --list_installed || true
 
-      - name: Configure NDK
+      # ------------------------------------------------------------
+      # CONFIGURE NDK
+      # ------------------------------------------------------------
+      - name: Configure Android NDK
         shell: bash
         run: |
           set -e
@@ -104,16 +104,10 @@ jobs:
           NDK="$SDK_ROOT/ndk/27.2.12479018"
           TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
 
-          if [ ! -d "$NDK" ]; then
-            echo "ERROR: NDK was not installed:"
-            echo "$NDK"
-            exit 1
-          fi
-
           CXX="$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
 
           if [ ! -x "$CXX" ]; then
-            echo "ERROR: AArch64 Android compiler not found:"
+            echo "ERROR: Android AArch64 compiler not found:"
             echo "$CXX"
             exit 1
           fi
@@ -124,15 +118,19 @@ jobs:
           echo "CXX=$CXX" >> "$GITHUB_ENV"
 
           echo "========================================"
-          echo "NDK:"
+          echo "ANDROID NDK"
+          echo "========================================"
           echo "$NDK"
           echo
           echo "Compiler:"
           echo "$CXX"
-          echo "========================================"
+          echo
 
           "$CXX" --version
 
+      # ------------------------------------------------------------
+      # DOWNLOAD NETWORK
+      # ------------------------------------------------------------
       - name: Download NNUE network
         shell: bash
         run: |
@@ -141,8 +139,11 @@ jobs:
           NET_NAME="$(tr -d '\r\n' < network.txt)"
           NET_FILE="${NET_NAME}.nnue"
 
-          echo "Network: $NET_NAME"
-          echo "File: $NET_FILE"
+          echo "Network name:"
+          echo "$NET_NAME"
+
+          echo "Network file:"
+          echo "$NET_FILE"
 
           curl -fL \
             "https://github.com/Orbital-Web/Raphael-Net/releases/download/${NET_NAME}/${NET_FILE}" \
@@ -151,71 +152,39 @@ jobs:
           test -s "$NET_FILE"
 
           echo
-          echo "Network downloaded:"
+          echo "Downloaded network:"
           ls -lh "$NET_FILE"
 
-      - name: Preprocess NNUE network for ARM64 NEON
+          echo
+          echo "Original SHA256:"
+          sha256sum "$NET_FILE"
+
+          echo "NET_NAME=$NET_NAME" >> "$GITHUB_ENV"
+          echo "NET_FILE=$NET_FILE" >> "$GITHUB_ENV"
+
+      # ------------------------------------------------------------
+      # BUILD HOST GENERIC REFERENCE
+      #
+      # IMPORTANT:
+      # This uses the ORIGINAL network.
+      #
+      # No AVX2 / AVX512 / NEON network permutation is applied.
+      # This gives us a reference implementation.
+      # ------------------------------------------------------------
+      - name: Build x86-64 generic reference
         shell: bash
         run: |
           set -e
 
-          mkdir -p build
+          mkdir -p build/reference
 
-          NET_NAME="$(tr -d '\r\n' < network.txt)"
-          NET_FILE="${NET_NAME}.nnue"
-
-          echo "Building host NNUE preprocessor..."
-          clang++ \
-            -std=c++20 \
-            -O2 \
-            -mavx2 \
-            -Isrc \
-            -DEVAL_NNUE \
-            -DEVAL_MULTILAYER \
-            src/eval/net/permute.cpp \
-            -o build/perm
-
-          echo "Preprocessing network for AVX2-compatible / NEON layout..."
-          ./build/perm "$NET_FILE"
-
-          echo "Processed network:"
-          ls -lh "$NET_FILE"
-
-      - name: Build Raphael Android ARM64 NEON
-        shell: bash
-        run: |
-          set -e
-
-          mkdir -p build
-
-          NET_NAME="$(tr -d '\r\n' < network.txt)"
-          NET_FILE="${NET_NAME}.nnue"
           VERSION_BASE="$(tr -d '\r\n' < version.txt)"
           COMMIT_SHA="$(git rev-parse --short HEAD)"
-          VERSION="${VERSION_BASE}-dev-${COMMIT_SHA}"
-
-          CXXFLAGS=(
-            -std=c++20
-            -O3
-            -flto
-            -march=armv8-a
-            -fPIC
-            -pthread
-            -Wall
-            -Wextra
-            -Isrc
-            -DEVAL_NNUE
-            -DEVAL_MULTILAYER
-            "-DVERSION=\"${VERSION}\""
-            "-DNETWORK_FILE=${NET_FILE}"
-          )
+          VERSION="${VERSION_BASE}-reference-${COMMIT_SHA}"
 
           echo "========================================"
-          echo "Raphael Android ARM64 NEON"
+          echo "BUILDING GENERIC REFERENCE"
           echo "========================================"
-          echo "Compiler:"
-          echo "$CXX"
-          echo
           echo "Network:"
           echo "$NET_FILE"
           echo
@@ -226,6 +195,7 @@ jobs:
           mapfile -t SOURCES < <(
             find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort
           )
+
           SOURCES+=(uci.cpp)
 
           echo
@@ -234,21 +204,239 @@ jobs:
 
           for src in "${SOURCES[@]}"; do
             name="$(echo "$src" | tr '/' '_')"
-            obj="build/${name%.cpp}.o"
+            obj="build/reference/${name%.cpp}.o"
+
+            echo "Compiling:"
+            echo "  $src"
+
+            clang++ \
+              -std=c++20 \
+              -O2 \
+              -march=x86-64 \
+              -fPIC \
+              -pthread \
+              -Wall \
+              -Wextra \
+              -Isrc \
+              -DEVAL_NNUE \
+              -DEVAL_MULTILAYER \
+              "-DVERSION=\"${VERSION}\"" \
+              "-DNETWORK_FILE=${NET_FILE}" \
+              -c "$src" \
+              -o "$obj"
+          done
+
+          echo
+          echo "Linking reference..."
+
+          clang++ \
+            -O2 \
+            -march=x86-64 \
+            -pthread \
+            -fuse-ld=lld \
+            build/reference/*.o \
+            -o build/raphael-reference
+
+          chmod +x build/raphael-reference
+
+          echo
+          echo "Reference binary:"
+          file build/raphael-reference
+
+          ls -lh build/raphael-reference
+
+      # ------------------------------------------------------------
+      # REFERENCE ENGINE TEST
+      # ------------------------------------------------------------
+      - name: Run reference engine tests
+        shell: bash
+        run: |
+          set -e
+
+          echo "========================================"
+          echo "REFERENCE UCI TEST"
+          echo "========================================"
+
+          printf '%s\n' \
+            "uci" \
+            "isready" \
+            "position startpos" \
+            "eval" \
+            "go depth 8" \
+            "quit" \
+            | ./build/raphael-reference \
+            | tee build/reference-test.txt
+
+          echo
+          echo "========================================"
+          echo "REFERENCE BENCH"
+          echo "========================================"
+
+          printf '%s\n' \
+            "uci" \
+            "isready" \
+            "bench" \
+            "quit" \
+            | ./build/raphael-reference \
+            | tee build/reference-bench.txt
+
+      # ------------------------------------------------------------
+      # MAKE A SEPARATE COPY FOR NEON
+      # ------------------------------------------------------------
+      - name: Prepare NEON network copy
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p build/neon
+
+          cp "$NET_FILE" \
+            "build/neon/$NET_FILE"
+
+          echo "Original network:"
+          sha256sum "$NET_FILE"
+
+          echo
+          echo "NEON network copy:"
+          sha256sum "build/neon/$NET_FILE"
+
+      # ------------------------------------------------------------
+      # BUILD NETWORK PERMUTATION TOOL
+      #
+      # This deliberately uses AVX2 because Raphael's permutation
+      # target for AVX2/NEON is the same permutation class.
+      #
+      # The tool runs on the HOST only.
+      # It does NOT execute ARM code.
+      # ------------------------------------------------------------
+      - name: Build NNUE permutation tool
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p build/perm
+
+          echo "Building NNUE permutation tool..."
+
+          clang++ \
+            -std=c++20 \
+            -O2 \
+            -mavx2 \
+            -Isrc \
+            -DEVAL_NNUE \
+            -DEVAL_MULTILAYER \
+            src/eval/net/permute.cpp \
+            -o build/perm/perm
+
+          chmod +x build/perm/perm
+
+          echo
+          echo "Permutation tool:"
+          file build/perm/perm
+
+      # ------------------------------------------------------------
+      # PERMUTE ONLY THE NEON COPY
+      # ------------------------------------------------------------
+      - name: Permute network for NEON
+        shell: bash
+        run: |
+          set -e
+
+          NEON_NET="build/neon/$NET_FILE"
+
+          echo "========================================"
+          echo "NEON NETWORK PREPROCESSING"
+          echo "========================================"
+
+          echo "Before:"
+          sha256sum "$NEON_NET"
+
+          echo
+          echo "Running permutation tool..."
+
+          ./build/perm/perm "$NEON_NET"
+
+          test -s "$NEON_NET"
+
+          echo
+          echo "After:"
+          sha256sum "$NEON_NET"
+
+          echo
+          echo "Original remains:"
+          sha256sum "$NET_FILE"
+
+      # ------------------------------------------------------------
+      # BUILD ANDROID ARM64 NEON
+      # ------------------------------------------------------------
+      - name: Build Raphael Android ARM64 NEON
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p build/android
+
+          VERSION_BASE="$(tr -d '\r\n' < version.txt)"
+          COMMIT_SHA="$(git rev-parse --short HEAD)"
+          VERSION="${VERSION_BASE}-android-neon-${COMMIT_SHA}"
+
+          NEON_NET_PATH="build/neon/$NET_FILE"
+
+          echo "========================================"
+          echo "RAPHAEL ANDROID ARM64 NEON"
+          echo "========================================"
+          echo "Compiler:"
+          echo "$CXX"
+          echo
+          echo "Network:"
+          echo "$NEON_NET_PATH"
+          echo
+          echo "Version:"
+          echo "$VERSION"
+          echo "========================================"
+
+          mapfile -t SOURCES < <(
+            find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort
+          )
+
+          SOURCES+=(uci.cpp)
+
+          echo
+          echo "Source files: ${#SOURCES[@]}"
+          echo
+
+          for src in "${SOURCES[@]}"; do
+            name="$(echo "$src" | tr '/' '_')"
+            obj="build/android/${name%.cpp}.o"
 
             echo "----------------------------------------"
-            echo "Compiling: $src"
-            echo "Object:    $obj"
+            echo "Compiling:"
+            echo "$src"
+            echo
+            echo "Object:"
+            echo "$obj"
 
             "$CXX" \
-              "${CXXFLAGS[@]}" \
+              -std=c++20 \
+              -O3 \
+              -flto \
+              -march=armv8-a \
+              -fPIC \
+              -pthread \
+              -Wall \
+              -Wextra \
+              -Isrc \
+              -DEVAL_NNUE \
+              -DEVAL_MULTILAYER \
+              "-DVERSION=\"${VERSION}\"" \
+              "-DNETWORK_FILE=${NEON_NET_PATH}" \
               -c "$src" \
               -o "$obj"
           done
 
           echo
           echo "========================================"
-          echo "Linking Raphael..."
+          echo "LINKING ANDROID ENGINE"
           echo "========================================"
 
           "$CXX" \
@@ -259,33 +447,40 @@ jobs:
             -fuse-ld=lld \
             -static-libstdc++ \
             -Wl,--gc-sections \
-            build/*.o \
-            -o build/raphael-android-arm64
+            build/android/*.o \
+            -o build/android/raphael-android-arm64-neon
+
+          chmod +x build/android/raphael-android-arm64-neon
 
           echo
           echo "========================================"
-          echo "BUILD SUCCESS"
+          echo "ANDROID BUILD SUCCESS"
           echo "========================================"
 
-          file build/raphael-android-arm64
-          ls -lh build/raphael-android-arm64
+          file build/android/raphael-android-arm64-neon
 
+          ls -lh \
+            build/android/raphael-android-arm64-neon
+
+      # ------------------------------------------------------------
+      # CHECK ELF
+      # ------------------------------------------------------------
       - name: Check Android ELF
         shell: bash
         run: |
           set -e
 
-          BINARY="build/raphael-android-arm64"
+          BINARY="build/android/raphael-android-arm64-neon"
           READELF="$TOOLCHAIN/bin/llvm-readelf"
 
           echo "========================================"
-          echo "ELF INFORMATION"
+          echo "ANDROID ELF INFORMATION"
           echo "========================================"
 
           file "$BINARY"
 
           echo
-          echo "Architecture:"
+          echo "ELF header:"
           "$READELF" -h "$BINARY" | grep -E \
             "Class:|Machine:|Type:" || true
 
@@ -294,18 +489,82 @@ jobs:
           "$READELF" -d "$BINARY" || true
 
           echo
-          echo "AArch64 / NEON compiler macros:"
+          echo "NEON symbols/macros from compiler:"
 
           "$CXX" \
             -march=armv8-a \
             -dM \
             -E \
             -x c++ /dev/null \
-            | grep -E "__aarch64__|__ARM_NEON" || true
+            | grep -E \
+              "__aarch64__|__ARM_NEON|__ARM_NEON__" \
+            || true
 
-      - name: Upload Android engine
+      # ------------------------------------------------------------
+      # SAVE DIAGNOSTIC INFORMATION
+      # ------------------------------------------------------------
+      - name: Create diagnostic report
+        shell: bash
+        run: |
+          set -e
+
+          {
+            echo "Raphael Android ARM64 NEON diagnostic"
+            echo
+            echo "Commit:"
+            git rev-parse HEAD
+            echo
+            echo "Short commit:"
+            git rev-parse --short HEAD
+            echo
+            echo "Version:"
+            cat version.txt
+            echo
+            echo "Network:"
+            cat network.txt
+            echo
+            echo "Original network SHA256:"
+            sha256sum "$NET_FILE"
+            echo
+            echo "NEON network SHA256:"
+            sha256sum "build/neon/$NET_FILE"
+            echo
+            echo "Reference binary:"
+            file build/raphael-reference
+            echo
+            echo "Android binary:"
+            file build/android/raphael-android-arm64-neon
+            echo
+            echo "Reference bench:"
+            grep -E \
+              "bench|nodes|nps|hashfull" \
+              build/reference-bench.txt \
+              || true
+          } > build/diagnostic-report.txt
+
+          cat build/diagnostic-report.txt
+
+      # ------------------------------------------------------------
+      # UPLOAD ANDROID BINARY
+      # ------------------------------------------------------------
+      - name: Upload Android NEON engine
         uses: actions/upload-artifact@v4
         with:
-          name: raphael-android-arm64
-          path: build/raphael-android-arm64
+          name: raphael-android-arm64-neon
+          path: |
+            build/android/raphael-android-arm64-neon
+            build/diagnostic-report.txt
+          if-no-files-found: error
+
+      # ------------------------------------------------------------
+      # UPLOAD REFERENCE BINARY
+      # ------------------------------------------------------------
+      - name: Upload x86-64 reference engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: raphael-x86-64-reference
+          path: |
+            build/raphael-reference
+            build/reference-test.txt
+            build/reference-bench.txt
           if-no-files-found: error
