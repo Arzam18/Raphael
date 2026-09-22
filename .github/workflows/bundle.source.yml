@@ -7,6 +7,10 @@ on:
         description: 'Max individual file size in bytes (larger files are listed but not inlined)'
         required: false
         default: '524288'
+      split_size:
+        description: 'Size of each split part (e.g. 150K, 200K, 256K)'
+        required: false
+        default: '150K'
 
 jobs:
   bundle:
@@ -36,6 +40,8 @@ jobs:
           INCLUDE_NAME_RE='(^|/)(CMakeLists\.txt|Makefile|makefile|GNUmakefile|meson\.build|BUILD|BUILD\.bazel|WORKSPACE|WORKSPACE\.bazel|Cargo\.toml|Cargo\.lock|rust-toolchain|rust-toolchain\.toml|build\.gradle|build\.gradle\.kts|settings\.gradle|settings\.gradle\.kts|package\.json|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|tsconfig\.json|jsconfig\.json|Pipfile|Pipfile\.lock|pyproject\.toml|setup\.py|setup\.cfg|requirements\.txt|Gemfile|Gemfile\.lock|Rakefile|go\.mod|go\.sum|pubspec\.yaml|pubspec\.lock|mix\.exs|mix\.lock|project\.clj|deps\.edn|CMakePresets\.json|Dockerfile|docker-compose\.yml|docker-compose\.yaml|\.gitignore|\.gitattributes|\.editorconfig|\.clang-format|\.clang-tidy|\.rustfmt\.toml|\.cargo/config\.toml)$'
 
           # ---- Paths we always exclude ----
+          # NOTE: .github/ is intentionally NOT excluded so you can see the
+          # workflow that produced this bundle.
           EXCLUDE_PATH_RE='(^|/)(target/|build/|dist/|out/|node_modules/|vendor/|__pycache__/|\.idea/|\.vscode/|\.vs/)'
 
           # ---- Licence / legal files ----
@@ -151,10 +157,41 @@ jobs:
           echo "Size:   $(stat -c%s "$OUT") bytes"
           echo "Lines:  $(wc -l < "$OUT")"
 
+      - name: Split bundle into pieces
+        env:
+          SPLIT_SIZE: ${{ inputs.split_size || '150K' }}
+        run: |
+          set -euo pipefail
+
+          BUNDLE=$(ls bundle-*.txt | grep -v '^bundle-part-' | head -n1)
+          if [ -z "$BUNDLE" ]; then
+            echo "ERROR: no bundle file found"
+            exit 1
+          fi
+
+          BASE=$(basename "$BUNDLE" .txt)
+          SIZE="${SPLIT_SIZE:-150K}"
+
+          echo "Splitting $BUNDLE into ${SIZE} pieces…"
+
+          # Split into bundle-part-00.txt, bundle-part-01.txt, ...
+          split -b "$SIZE" -d -a 2 \
+            --additional-suffix=".txt" \
+            "$BUNDLE" \
+            "${BASE}-part-"
+
+          echo ""
+          echo "Parts produced:"
+          ls -la "${BASE}"-part-*.txt | awk '{printf "  %-50s %10s bytes\n", $9, $5}'
+
+          echo ""
+          echo "Total parts: $(ls "${BASE}"-part-*.txt | wc -l)"
+
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
           name: source-bundle
-          path: bundle-*.txt
+          path: |
+            bundle-*.txt
           if-no-files-found: error
           retention-days: 30
