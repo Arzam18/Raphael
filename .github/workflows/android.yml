@@ -163,88 +163,185 @@ jobs:
           echo "NET_FILE=$NET_FILE" >> "$GITHUB_ENV"
 
       # ------------------------------------------------------------
-      # BUILD HOST GENERIC REFERENCE
+      # PREPARE HOST AVX2 REFERENCE NETWORK
       #
-      # IMPORTANT:
-      # This uses the ORIGINAL network.
+      # Raphael's current threat-input geometry is SIMD-only. There is
+      # no scalar geometry implementation, so an actual scalar/generic
+      # reference cannot be built from this source tree.
       #
-      # No AVX2 / AVX512 / NEON network permutation is applied.
-      # This gives us a reference implementation.
+      # Build a host AVX2 reference instead. The network copy is
+      # permuted to the AVX2/NEON permutation class; the original
+      # downloaded network is never modified.
       # ------------------------------------------------------------
-      - name: Build x86-64 generic reference
+      - name: Prepare host AVX2 reference network
         shell: bash
         run: |
           set -e
 
           mkdir -p build/reference
+          cp "$NET_FILE" "build/reference/$NET_FILE"
 
-          VERSION_BASE="$(tr -d '\r\n' < version.txt)"
-          COMMIT_SHA="$(git rev-parse --short HEAD)"
-          VERSION="${VERSION_BASE}-reference-${COMMIT_SHA}"
-
-          echo "========================================"
-          echo "BUILDING GENERIC REFERENCE"
-          echo "========================================"
-          echo "Network:"
-          echo "$NET_FILE"
+          echo "Original network:"
+          sha256sum "$NET_FILE"
           echo
-          echo "Version:"
-          echo "$VERSION"
-          echo "========================================"
+          echo "Host reference network before permutation:"
+          sha256sum "build/reference/$NET_FILE"
 
-          mapfile -t SOURCES < <(
-            find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort
-          )
+      # ------------------------------------------------------------
+      # BUILD NNUE PERMUTATION TOOLS
+      #
+      # Two targets are required:
+      #   AVX2 host reference -> permutation 1
+      #   ARM64 NEON          -> permutation 0
+      #
+      # The corrected permute.cpp selects the NEON target through
+      # PERMUTE_NEON, independently of the host compiler architecture.
+      # ------------------------------------------------------------
+      - name: Build NNUE permutation tools
+        shell: bash
+        run: |
+          set -e
 
-          SOURCES+=(uci.cpp)
+          mkdir -p build/perm
 
-          echo
-          echo "Source files: ${#SOURCES[@]}"
-          echo
-
-          for src in "${SOURCES[@]}"; do
-            name="$(echo "$src" | tr '/' '_')"
-            obj="build/reference/${name%.cpp}.o"
-
-            echo "Compiling:"
-            echo "  $src"
-
-            clang++ \
-              -std=c++20 \
-              -O2 \
-              -march=x86-64 \
-              -fPIC \
-              -pthread \
-              -Wall \
-              -Wextra \
-              -Isrc \
-              -DEVAL_NNUE \
-              -DEVAL_MULTILAYER \
-            -DPERMUTE_NEON \
-              "-DVERSION=\"${VERSION}\"" \
-              "-DNETWORK_FILE=${NET_FILE}" \
-              -c "$src" \
-              -o "$obj"
-          done
-
-          echo
-          echo "Linking reference..."
+          echo "Building AVX2 permutation tool..."
 
           clang++ \
+            -std=c++20 \
             -O2 \
-            -march=x86-64 \
-            -pthread \
-            -fuse-ld=lld \
-            build/reference/*.o \
-            -o build/raphael-reference
+            -mavx2 \
+            -Isrc \
+            -DEVAL_NNUE \
+            -DEVAL_MULTILAYER \
+            src/eval/net/permute.cpp \
+            -o build/perm/perm-avx2
 
-          chmod +x build/raphael-reference
+          echo "Building NEON permutation tool..."
+
+          clang++ \
+            -std=c++20 \
+            -O2 \
+            -mavx2 \
+            -Isrc \
+            -DEVAL_NNUE \
+            -DEVAL_MULTILAYER \
+            -DPERMUTE_NEON \
+            src/eval/net/permute.cpp \
+            -o build/perm/perm-neon
+
+          chmod +x build/perm/perm-avx2 build/perm/perm-neon
 
           echo
-          echo "Reference binary:"
-          file build/raphael-reference
+          echo "AVX2 permutation tool:"
+          file build/perm/perm-avx2
 
-          ls -lh build/raphael-reference
+          echo
+          echo "NEON permutation tool:"
+          file build/perm/perm-neon
+
+      # ------------------------------------------------------------
+      # PERMUTE HOST AVX2 REFERENCE NETWORK
+      # ------------------------------------------------------------
+      - name: Permute host reference network
+        shell: bash
+        run: |
+          set -e
+
+          REF_NET="build/reference/$NET_FILE"
+
+          echo "========================================"
+          echo "HOST AVX2 NETWORK PREPROCESSING"
+          echo "========================================"
+
+          ./build/perm/perm-avx2 "$REF_NET"
+
+          test -s "$REF_NET"
+
+          echo
+          echo "Host reference network after permutation:"
+          sha256sum "$REF_NET"
+
+          echo
+          echo "Original network remains unchanged:"
+          sha256sum "$NET_FILE"
+
+      # ------------------------------------------------------------
+      # BUILD HOST AVX2 REFERENCE
+      # ------------------------------------------------------------
+      - name: Build x86-64 AVX2 reference
+        shell: bash
+        run: |
+            set -e
+
+            mkdir -p build/reference/obj
+
+            VERSION_BASE="$(tr -d '\r\n' < version.txt)"
+            COMMIT_SHA="$(git rev-parse --short HEAD)"
+            VERSION="${VERSION_BASE}-reference-avx2-${COMMIT_SHA}"
+            REF_NET="build/reference/$NET_FILE"
+
+            echo "========================================"
+            echo "BUILDING X86-64 AVX2 REFERENCE"
+            echo "========================================"
+            echo "Network:"
+            echo "$REF_NET"
+            echo
+            echo "Version:"
+            echo "$VERSION"
+            echo "========================================"
+
+            mapfile -t SOURCES < <(
+              find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort
+            )
+
+            SOURCES+=(uci.cpp)
+
+            echo
+            echo "Source files: ${#SOURCES[@]}"
+            echo
+
+            for src in "${SOURCES[@]}"; do
+              name="$(echo "$src" | tr '/' '_')"
+              obj="build/reference/obj/${name%.cpp}.o"
+
+              echo "Compiling:"
+              echo "  $src"
+
+              clang++ \
+                -std=c++20 \
+                -O2 \
+                -mavx2 \
+                -fPIC \
+                -pthread \
+                -Wall \
+                -Wextra \
+                -Isrc \
+                -DEVAL_NNUE \
+                -DEVAL_MULTILAYER \
+                "-DVERSION=\"${VERSION}\"" \
+                "-DNETWORK_FILE=${REF_NET}" \
+                -c "$src" \
+                -o "$obj"
+            done
+
+            echo
+            echo "Linking AVX2 reference..."
+
+            clang++ \
+              -O2 \
+              -mavx2 \
+              -pthread \
+              -fuse-ld=lld \
+              build/reference/obj/*.o \
+              -o build/raphael-reference
+
+            chmod +x build/raphael-reference
+
+            echo
+            echo "Reference binary:"
+            file build/raphael-reference
+
+            ls -lh build/raphael-reference
 
       # ------------------------------------------------------------
       # REFERENCE ENGINE TEST
@@ -290,53 +387,13 @@ jobs:
           set -e
 
           mkdir -p build/neon
-
-          cp "$NET_FILE" \
-            "build/neon/$NET_FILE"
+          cp "$NET_FILE" "build/neon/$NET_FILE"
 
           echo "Original network:"
           sha256sum "$NET_FILE"
-
           echo
           echo "NEON network copy:"
           sha256sum "build/neon/$NET_FILE"
-
-      # ------------------------------------------------------------
-      # BUILD NETWORK PERMUTATION TOOL
-      #
-      # The tool runs on the HOST only.
-      #
-      # PERMUTE_NEON explicitly selects Raphael's generic permutation
-      # (NONE), because the ARM NEON implementation uses 128-bit
-      # packus semantics and therefore does NOT use the AVX2 layout.
-      #
-      # The tool does NOT execute ARM code.
-      # ------------------------------------------------------------
-      - name: Build NNUE permutation tool
-        shell: bash
-        run: |
-          set -e
-
-          mkdir -p build/perm
-
-          echo "Building NNUE permutation tool..."
-
-          clang++ \
-            -std=c++20 \
-            -O2 \
-            -mavx2 \
-            -Isrc \
-            -DEVAL_NNUE \
-            -DEVAL_MULTILAYER \
-            -DPERMUTE_NEON \
-            src/eval/net/permute.cpp \
-            -o build/perm/perm
-
-          chmod +x build/perm/perm
-
-          echo
-          echo "Permutation tool:"
-          file build/perm/perm
 
       # ------------------------------------------------------------
       # PERMUTE ONLY THE NEON COPY
@@ -355,10 +412,7 @@ jobs:
           echo "Before:"
           sha256sum "$NEON_NET"
 
-          echo
-          echo "Running permutation tool..."
-
-          ./build/perm/perm "$NEON_NET"
+          ./build/perm/perm-neon "$NEON_NET"
 
           test -s "$NEON_NET"
 
@@ -367,7 +421,7 @@ jobs:
           sha256sum "$NEON_NET"
 
           echo
-          echo "Original remains:"
+          echo "Original remains unchanged:"
           sha256sum "$NET_FILE"
 
       # ------------------------------------------------------------
@@ -432,7 +486,6 @@ jobs:
               -Isrc \
               -DEVAL_NNUE \
               -DEVAL_MULTILAYER \
-            -DPERMUTE_NEON \
               "-DVERSION=\"${VERSION}\"" \
               "-DNETWORK_FILE=${NEON_NET_PATH}" \
               -c "$src" \
@@ -562,12 +615,12 @@ jobs:
           if-no-files-found: error
 
       # ------------------------------------------------------------
-      # UPLOAD REFERENCE BINARY
+      # UPLOAD AVX2 REFERENCE BINARY
       # ------------------------------------------------------------
       - name: Upload x86-64 reference engine
         uses: actions/upload-artifact@v4
         with:
-          name: raphael-x86-64-reference
+          name: raphael-x86-64-avx2-reference
           path: |
             build/raphael-reference
             build/reference-test.txt
