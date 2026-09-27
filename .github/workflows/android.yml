@@ -220,6 +220,7 @@ jobs:
               -Isrc \
               -DEVAL_NNUE \
               -DEVAL_MULTILAYER \
+            -DPERMUTE_NEON \
               "-DVERSION=\"${VERSION}\"" \
               "-DNETWORK_FILE=${NET_FILE}" \
               -c "$src" \
@@ -303,11 +304,13 @@ jobs:
       # ------------------------------------------------------------
       # BUILD NETWORK PERMUTATION TOOL
       #
-      # This deliberately uses AVX2 because Raphael's permutation
-      # target for AVX2/NEON is the same permutation class.
-      #
       # The tool runs on the HOST only.
-      # It does NOT execute ARM code.
+      #
+      # PERMUTE_NEON explicitly selects Raphael's generic permutation
+      # (NONE), because the ARM NEON implementation uses 128-bit
+      # packus semantics and therefore does NOT use the AVX2 layout.
+      #
+      # The tool does NOT execute ARM code.
       # ------------------------------------------------------------
       - name: Build NNUE permutation tool
         shell: bash
@@ -325,6 +328,7 @@ jobs:
             -Isrc \
             -DEVAL_NNUE \
             -DEVAL_MULTILAYER \
+            -DPERMUTE_NEON \
             src/eval/net/permute.cpp \
             -o build/perm/perm
 
@@ -428,6 +432,7 @@ jobs:
               -Isrc \
               -DEVAL_NNUE \
               -DEVAL_MULTILAYER \
+            -DPERMUTE_NEON \
               "-DVERSION=\"${VERSION}\"" \
               "-DNETWORK_FILE=${NEON_NET_PATH}" \
               -c "$src" \
