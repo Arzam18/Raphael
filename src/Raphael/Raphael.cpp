@@ -269,7 +269,7 @@ void Raphael::t_search_function(i32 thread_id) {
             }
 
             unordered_map<u16, i32> move_votes{};
-            i32 thread_weights[thread_data_.size()] = {};
+            vector<i32> thread_weights(thread_data_.size(), 0);
             for (const auto& td : thread_data_) {
                 const i32 tid = td->thread_id;
                 const i32 score = td->result.score;
