@@ -257,6 +257,32 @@ private:
     // pre-calculated lookup table of ray between squares from (exclusive) and to (inclusive)
     static const MultiArray<BitBoard, 64, 64> SQUARES_BETWEEN;
 
+    static constexpr i32 slider_dirs[2][4][2] = {
+        {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}}, // bishops
+        {{1, 0}, {0, -1}, {-1, 0},  {0, 1} }  // rooks
+    };
+
+    template <bool is_rook>
+    [[nodiscard]] static constexpr BitBoard get_slider_attacks(Square sq, BitBoard occupied) {
+        i32 f0 = sq.file();
+        i32 r0 = sq.rank();
+
+        BitBoard attacks = 0;
+        for (i32 i = 0; i < 4; i++) {
+            const i32 df = slider_dirs[is_rook][i][0];
+            const i32 dr = slider_dirs[is_rook][i][1];
+
+            i32 f;
+            i32 r;
+            for (f = f0 + df, r = r0 + dr; f >= 0 && f < 8 && r >= 0 && r < 8; f += df, r += dr) {
+                const auto index = Square(static_cast<File>(f), static_cast<Rank>(r));
+                attacks.set(index);
+                if (occupied.is_set(index)) break;
+            }
+        }
+
+        return attacks;
+    }
 
 public:
     template <Color::underlying color>
@@ -414,32 +440,6 @@ private:
         }
     }
 
-    static constexpr i32 slider_dirs[2][4][2] = {
-        {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}}, // bishops
-        {{1, 0}, {0, -1}, {-1, 0},  {0, 1} }  // rooks
-    };
-
-    template <bool is_rook>
-    [[nodiscard]] static constexpr BitBoard get_slider_attacks(Square sq, BitBoard occupied) {
-        i32 f0 = sq.file();
-        i32 r0 = sq.rank();
-
-        BitBoard attacks = 0;
-        for (i32 i = 0; i < 4; i++) {
-            const i32 df = slider_dirs[is_rook][i][0];
-            const i32 dr = slider_dirs[is_rook][i][1];
-
-            i32 f;
-            i32 r;
-            for (f = f0 + df, r = r0 + dr; f >= 0 && f < 8 && r >= 0 && r < 8; f += df, r += dr) {
-                const auto index = Square(static_cast<File>(f), static_cast<Rank>(r));
-                attacks.set(index);
-                if (occupied.is_set(index)) break;
-            }
-        }
-
-        return attacks;
-    }
 };
 
 
