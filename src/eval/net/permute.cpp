@@ -63,7 +63,10 @@ private:
         {0, 4, 1, 5, 2, 6, 3, 7}, // avx512
     };
 
-#ifdef USE_AVX512
+#ifdef PERMUTE_NEON
+    // ARM NEON's 128-bit pack layout matches the generic neuron order.
+    static constexpr u8 target_idx = 0;
+#elif defined(USE_AVX512)
     static constexpr u8 target_idx = 2;
 #elif defined(USE_AVX2)
     static constexpr u8 target_idx = 1;
