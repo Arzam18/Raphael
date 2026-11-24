@@ -1,4 +1,5 @@
 #ifdef EVAL_NNUE
+#include <algorithm>
 #include <eval/geometry.h>
 
 using std::array;
@@ -145,6 +146,60 @@ void Vector::store_into(void* dst) const { _mm512_store_si512(dst, raw); }
 
 Vector Vector::flip() const { return {_mm512_shuffle_i64x2(raw, raw, 0b01001110)}; }
 
+#elif defined(USE_NEON)
+
+Vector Vector::load(const void* src) {
+    const auto* ptr = static_cast<const u8*>(src);
+
+    Vector result{};
+
+    result.raw[0] = load_u8(ptr + 0);
+    result.raw[1] = load_u8(ptr + 16);
+    result.raw[2] = load_u8(ptr + 32);
+    result.raw[3] = load_u8(ptr + 48);
+
+    return result;
+}
+
+void Vector::store_into(void* dst) const {
+    auto* ptr = static_cast<u8*>(dst);
+
+    store_u8(ptr + 0, raw[0]);
+    store_u8(ptr + 16, raw[1]);
+    store_u8(ptr + 32, raw[2]);
+    store_u8(ptr + 48, raw[3]);
+}
+
+Vector Vector::flip() const {
+    Vector result{};
+
+    result.raw[0] = raw[2];
+    result.raw[1] = raw[3];
+    result.raw[2] = raw[0];
+    result.raw[3] = raw[1];
+
+    return result;
+}
+
+BitRays Vector::to_mask() const {
+    BitRays result = 0;
+    alignas(16) u8 bytes[16];
+
+    for (i32 r = 0; r < 4; ++r) {
+        const auto top_bits = vshrq_n_u8(
+            vreinterpretq_u8_s8(raw[r].raw),
+            7
+        );
+
+        vst1q_u8(bytes, top_bits);
+
+        for (i32 i = 0; i < 16; ++i)
+            result |= static_cast<BitRays>(bytes[i] & 1) << (16 * r + i);
+    }
+
+    return result;
+}
+
 #elif defined(USE_AVX2)
 Vector Vector::load(const void* src) {
     return {
@@ -227,6 +282,316 @@ std::pair<Vector, Vector> permute_mailbox(
         _mm512_set1_epi8(chess::Piece::NONE)
     )};
     return permute_mailbox(perm, masked_mailbox);
+}
+
+#elif defined(USE_NEON)
+
+BitRays incoming_attackers(
+    const Vector& bits,
+    BitRays closest
+) {
+    const auto mask = Vector::load(
+        internal::INCOMING_THREATS_MASK.data()
+    );
+
+    Vector v{};
+
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[0].raw),
+            vreinterpretq_u8_s8(mask.raw[0].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[1].raw),
+            vreinterpretq_u8_s8(mask.raw[1].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[2].raw),
+            vreinterpretq_u8_s8(mask.raw[2].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[3].raw),
+            vreinterpretq_u8_s8(mask.raw[3].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    return v.to_mask() & closest;
+}
+
+BitRays incoming_sliders(
+    const Vector& bits,
+    BitRays closest
+) {
+    const auto mask = Vector::load(
+        internal::INCOMING_SLIDER_MASK.data()
+    );
+
+    Vector v{};
+
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[0].raw),
+            vreinterpretq_u8_s8(mask.raw[0].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[1].raw),
+            vreinterpretq_u8_s8(mask.raw[1].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[2].raw),
+            vreinterpretq_u8_s8(mask.raw[2].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vandq_u8(
+            vreinterpretq_u8_s8(bits.raw[3].raw),
+            vreinterpretq_u8_s8(mask.raw[3].raw)
+        ),
+        vdupq_n_u8(0)
+    ));
+
+    return v.to_mask()
+           & closest
+           & 0xFE'FE'FE'FE'FE'FE'FE'FE;
+}
+
+BitRays closest_occupied(const Vector& bits) {
+    Vector v{};
+
+    v.raw[0].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[0].raw),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[1].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[1].raw),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[2].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[2].raw),
+        vdupq_n_u8(0)
+    ));
+
+    v.raw[3].raw = vreinterpretq_s8_u8(vcgtq_u8(
+        vreinterpretq_u8_s8(bits.raw[3].raw),
+        vdupq_n_u8(0)
+    ));
+
+    const BitRays occupied = v.to_mask();
+    const BitRays o =
+        occupied | 0x81'81'81'81'81'81'81'81;
+
+    return (o ^ (o - 0x03'03'03'03'03'03'03'03))
+           & occupied;
+}
+
+Permutation permutation_for(chess::Square focus) {
+    const auto indices = Vector::load(
+        internal::PERMUTATIONS[focus].data()
+    );
+
+    const auto bad = vdupq_n_u8(0x80);
+
+    Vector invalid{};
+
+    invalid.raw[0].raw = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[0].raw),
+        bad
+    ));
+
+    invalid.raw[1].raw = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[1].raw),
+        bad
+    ));
+
+    invalid.raw[2].raw = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[2].raw),
+        bad
+    ));
+
+    invalid.raw[3].raw = vreinterpretq_s8_u8(vceqq_u8(
+        vreinterpretq_u8_s8(indices.raw[3].raw),
+        bad
+    ));
+
+    return {indices, invalid};
+}
+
+pair<Vector, Vector> permute_mailbox(
+    const Permutation& perm,
+    const Vector& masked_mailbox
+) {
+    const auto lut =
+        vld1q_u8(internal::PIECE_TO_BIT.data());
+
+    const uint8x16x4_t table = {{
+        vreinterpretq_u8_s8(masked_mailbox.raw[0].raw),
+        vreinterpretq_u8_s8(masked_mailbox.raw[1].raw),
+        vreinterpretq_u8_s8(masked_mailbox.raw[2].raw),
+        vreinterpretq_u8_s8(masked_mailbox.raw[3].raw),
+    }};
+
+    Vector permuted{};
+
+    permuted.raw[0].raw = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[0].raw
+            )
+        )
+    );
+
+    permuted.raw[1].raw = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[1].raw
+            )
+        )
+    );
+
+    permuted.raw[2].raw = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[2].raw
+            )
+        )
+    );
+
+    permuted.raw[3].raw = vreinterpretq_s8_u8(
+        vqtbl4q_u8(
+            table,
+            vreinterpretq_u8_s8(
+                perm.indices.raw[3].raw
+            )
+        )
+    );
+
+    Vector bits{};
+
+    bits.raw[0].raw = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[0].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[0].raw
+            )
+        )
+    );
+
+    bits.raw[1].raw = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[1].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[1].raw
+            )
+        )
+    );
+
+    bits.raw[2].raw = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[2].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[2].raw
+            )
+        )
+    );
+
+    bits.raw[3].raw = vreinterpretq_s8_u8(
+        vbicq_u8(
+            vreinterpretq_u8_s8(
+                vqtbl1q_u8(
+                    lut,
+                    vreinterpretq_u8_s8(
+                        permuted.raw[3].raw
+                    )
+                )
+            ),
+            vreinterpretq_u8_s8(
+                perm.invalid.raw[3].raw
+            )
+        )
+    );
+
+    return {permuted, bits};
+}
+
+std::pair<Vector, Vector> permute_mailbox(
+    const Permutation& perm,
+    std::span<const chess::Piece, 64> mailbox
+) {
+    return permute_mailbox(
+        perm,
+        Vector::load(mailbox.data())
+    );
+}
+
+std::pair<Vector, Vector> permute_mailbox(
+    const Permutation& perm,
+    std::span<const chess::Piece, 64> mailbox,
+    chess::Square ignore
+) {
+    array<chess::Piece, 64> copy{};
+
+    std::copy(
+        mailbox.begin(),
+        mailbox.end(),
+        copy.begin()
+    );
+
+    copy[static_cast<usize>(ignore)] =
+        chess::Piece::NONE;
+
+    return permute_mailbox(
+        perm,
+        Vector::load(copy.data())
+    );
 }
 
 #elif defined(USE_AVX2)

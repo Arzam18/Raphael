@@ -20,17 +20,21 @@ private:
         15, 14, 13, 12, 11, 10,  9,  8,
          7,  6,  5,  4,  3,  2,  1,  0
     );  // clang-format on
+#elif defined(USE_NEON)
+    VecI16 offset_ = zero_i16();
 #else
     __m128i offset_ = _mm_setzero_si128();
+#endif
 
+#if !defined(USE_AVX512)
     // precompute nonzero_idx[mask][nnz_idx] = position of nonzero block
     alignas(16) static constexpr MultiArray<u16, 256, 8> nonzero_idx = [] {
         MultiArray<u16, 256, 8> idx{};
 
         for (i32 i = 0; i < 256; i++) {
             i32 nnz = 0;
-
-            for (u8 mask = i; mask != 0; mask &= mask - 1) idx[i][nnz++] = std::countr_zero(mask);
+            for (u8 mask = i; mask != 0; mask &= mask - 1)
+                idx[i][nnz++] = std::countr_zero(mask);
         }
 
         return idx;
