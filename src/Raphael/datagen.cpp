@@ -1,6 +1,7 @@
 #include <Raphael/datagen.h>
 
 #include <csignal>
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -295,6 +296,11 @@ void generate_games(
 ) {
     signal(SIGINT, internal::handle_interrupt);
 
+    if (concurrency <= 0) {
+        cout << "info string datagen concurrency must be greater than zero\n" << flush;
+        return;
+    }
+
     // load seed_fens from book
     vector<string> seed_fens;
     if (book == "None")
@@ -332,7 +338,7 @@ void generate_games(
          << "generated: 0 games (0.0000 games/sec)" << flush;
 
     // start generation threads
-    thread threads[concurrency];
+    vector<thread> threads(static_cast<std::size_t>(concurrency));
     for (int i = 0; i < concurrency; i++)
         threads[i] = thread(
             internal::generation_thread,
