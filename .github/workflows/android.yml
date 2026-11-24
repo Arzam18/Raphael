@@ -1,0 +1,305 @@
+name: Raphael Android ARM64 NEON and DotProd
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Build ARM64 NEON and DotProd
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install host build tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm
+          clang++ --version
+          llvm-objdump --version
+
+      - name: Configure Android SDK paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if [ ! -d "$SDK_ROOT/cmdline-tools" ]; then
+            echo "::error::Android cmdline-tools not found under $SDK_ROOT"
+            exit 1
+          fi
+          echo "SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f -print
+
+      - name: Install Android NDK r27c and API 24
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | sort | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager was not found"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" \
+            "platforms;android-24" \
+            "build-tools;35.0.0" \
+            "ndk;27.2.12479018"
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" --list_installed || true
+
+      - name: Configure Android ARM64 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK="$SDK_ROOT/ndk/27.2.12479018"
+          TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+          CXX="$TOOLCHAIN/bin/aarch64-linux-android24-clang++"
+          READELF="$TOOLCHAIN/bin/llvm-readelf"
+          OBJDUMP="$TOOLCHAIN/bin/llvm-objdump"
+          for tool in "$CXX" "$READELF" "$OBJDUMP"; do
+            if [ ! -x "$tool" ]; then
+              echo "::error::Required NDK tool not found: $tool"
+              exit 1
+            fi
+          done
+          {
+            echo "NDK=$NDK"
+            echo "TOOLCHAIN=$TOOLCHAIN"
+            echo "CXX=$CXX"
+            echo "READELF=$READELF"
+            echo "OBJDUMP=$OBJDUMP"
+          } >> "$GITHUB_ENV"
+          "$CXX" --version
+
+      - name: Download NNUE network
+        shell: bash
+        run: |
+          set -euo pipefail
+          NET_NAME="$(tr -d '\r\n' < network.txt)"
+          if [ -z "$NET_NAME" ]; then
+            echo "::error::network.txt is empty"
+            exit 1
+          fi
+          NET_FILE="${NET_NAME}.nnue"
+          NET_URL="https://github.com/Orbital-Web/Raphael-Net/releases/download/${NET_NAME}/${NET_FILE}"
+          echo "Downloading $NET_FILE"
+          curl --fail --location --retry 3 --retry-all-errors "$NET_URL" -o "$NET_FILE"
+          test -s "$NET_FILE"
+          ls -lh "$NET_FILE"
+          sha256sum "$NET_FILE"
+          {
+            echo "NET_NAME=$NET_NAME"
+            echo "NET_FILE=$NET_FILE"
+          } >> "$GITHUB_ENV"
+
+      - name: Build network permutation tools and prepare network variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/perm build/reference build/neon build/reference/obj
+
+          # The upstream network stores an explicit permutation index. Raphael's
+          # AVX2 implementation expects permutation 1; ARM NEON uses permutation 0.
+          clang++ -std=c++20 -O2 -mavx2 -fconstexpr-steps=10000000 -Isrc \
+            -DEVAL_NNUE -DEVAL_MULTILAYER \
+            src/eval/net/permute.cpp -o build/perm/perm-avx2
+
+          clang++ -std=c++20 -O2 -mavx2 -fconstexpr-steps=10000000 -Isrc \
+            -DEVAL_NNUE -DEVAL_MULTILAYER -DPERMUTE_NEON \
+            src/eval/net/permute.cpp -o build/perm/perm-neon
+
+          chmod +x build/perm/perm-avx2 build/perm/perm-neon
+
+          cp "$NET_FILE" "build/reference/$NET_FILE"
+          cp "$NET_FILE" "build/neon/$NET_FILE"
+
+          ./build/perm/perm-avx2 "build/reference/$NET_FILE"
+          ./build/perm/perm-neon "build/neon/$NET_FILE"
+
+          echo "Original network (unchanged):"
+          sha256sum "$NET_FILE"
+          echo "AVX2 reference network:"
+          sha256sum "build/reference/$NET_FILE"
+          echo "NEON/DotProd network (shared layout):"
+          sha256sum "build/neon/$NET_FILE"
+
+      - name: Build x86-64 AVX2 reference engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_BASE="$(tr -d '\r\n' < version.txt)"
+          COMMIT_SHA="$(git rev-parse --short HEAD)"
+          VERSION="${VERSION_BASE}-reference-avx2-${COMMIT_SHA}"
+          REF_NET="build/reference/$NET_FILE"
+
+          mapfile -t SOURCES < <(find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort)
+          SOURCES+=(uci.cpp)
+          for src in "${SOURCES[@]}"; do
+            name="$(echo "$src" | tr '/' '_')"
+            obj="build/reference/obj/${name%.cpp}.o"
+            echo "Compiling $src"
+            clang++ -std=c++20 -O2 -mavx2 -fconstexpr-steps=10000000 -pthread -Wall -Wextra -Isrc \
+              -DEVAL_NNUE -DEVAL_MULTILAYER \
+              "-DVERSION=\"${VERSION}\"" \
+              "-DNETWORK_FILE=${REF_NET}" \
+              -c "$src" -o "$obj"
+          done
+
+          clang++ -O2 -mavx2 -pthread -fuse-ld=lld \
+            build/reference/obj/*.o -o build/raphael-reference
+          chmod +x build/raphael-reference
+          file build/raphael-reference
+          ls -lh build/raphael-reference
+
+      - name: Test x86-64 reference engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            printf '%s\n' uci isready 'position startpos' eval 'go depth 8'
+            sleep 3
+            printf '%s\n' quit
+          } | ./build/raphael-reference | tee build/reference-test.txt
+          { printf '%s\n' uci isready bench quit; } \
+            | ./build/raphael-reference | tee build/reference-bench.txt
+
+      - name: Build Android ARM64 NEON and DotProd binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_BASE="$(tr -d '\r\n' < version.txt)"
+          COMMIT_SHA="$(git rev-parse --short HEAD)"
+          ANDROID_NET="build/neon/$NET_FILE"
+          mapfile -t SOURCES < <(find src/Raphael src/eval -maxdepth 1 -name '*.cpp' -print | sort)
+          SOURCES+=(uci.cpp)
+
+          build_android_variant() {
+            local variant="$1"
+            local march="$2"
+            local version="${VERSION_BASE}-android-${variant}-${COMMIT_SHA}"
+            local out_dir="build/android/${variant}"
+            mkdir -p "$out_dir/obj"
+
+            echo "========================================"
+            echo "Building Android ARM64 ${variant}"
+            echo "Compiler: $CXX"
+            echo "Architecture: $march"
+            echo "Network: $ANDROID_NET"
+            echo "Version: $version"
+            echo "========================================"
+
+            for src in "${SOURCES[@]}"; do
+              name="$(echo "$src" | tr '/' '_')"
+              obj="$out_dir/obj/${name%.cpp}.o"
+              echo "Compiling $src"
+              "$CXX" \
+                -std=c++20 -O3 -flto -fconstexpr-steps=10000000 \
+                "$march" -mtune=cortex-a76 \
+                -fPIC -pthread -Wall -Wextra -Isrc \
+                -DEVAL_NNUE -DEVAL_MULTILAYER \
+                "-DVERSION=\"${version}\"" \
+                "-DNETWORK_FILE=${ANDROID_NET}" \
+                -c "$src" -o "$obj"
+            done
+
+            "$CXX" -O3 -flto "$march" -mtune=cortex-a76 \
+              -pthread -fuse-ld=lld -static-libstdc++ -Wl,--gc-sections \
+              "$out_dir"/obj/*.o \
+              -o "$out_dir/raphael-android-arm64-${variant}"
+
+            chmod +x "$out_dir/raphael-android-arm64-${variant}"
+            file "$out_dir/raphael-android-arm64-${variant}"
+            ls -lh "$out_dir/raphael-android-arm64-${variant}"
+          }
+
+          build_android_variant neon '-march=armv8-a'
+          build_android_variant dotprod '-march=armv8.2-a+dotprod'
+
+      - name: Verify Android ARM64 binaries and SIMD instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          NEON="build/android/neon/raphael-android-arm64-neon"
+          DOTPROD="build/android/dotprod/raphael-android-arm64-dotprod"
+          mkdir -p build/verification
+
+          for binary in "$NEON" "$DOTPROD"; do
+            test -s "$binary"
+            echo "=== $binary ==="
+            file "$binary"
+            "$READELF" -h "$binary" | grep -E 'Class:|Machine:|Type:'
+            if ! "$READELF" -h "$binary" | grep -q 'AArch64'; then
+              echo "::error::Not an AArch64 executable: $binary"
+              exit 1
+            fi
+            if "$READELF" -d "$binary" 2>/dev/null | grep -q 'libc++_shared.so'; then
+              echo "::error::Unexpected libc++_shared.so dependency: $binary"
+              exit 1
+            fi
+            "$OBJDUMP" -d "$binary" > "build/verification/$(basename "$binary").disasm"
+          done
+
+          NEON_DISASM="build/verification/$(basename "$NEON").disasm"
+          DOT_DISASM="build/verification/$(basename "$DOTPROD").disasm"
+
+          if ! grep -Eiq '\b(tbl|cmhi|cmeq|ushr|umull|sqxtun)\b' "$NEON_DISASM"; then
+            echo "::error::No expected ARM NEON instructions found in baseline binary"
+            exit 1
+          fi
+          if grep -Eiq '\bsdot\b' "$NEON_DISASM"; then
+            echo "::error::Baseline NEON binary unexpectedly contains SDOT"
+            exit 1
+          fi
+          if ! grep -Eiq '\bsdot\b' "$DOT_DISASM"; then
+            echo "::error::DotProd binary does not contain SDOT"
+            exit 1
+          fi
+
+          {
+            echo "Raphael Android ARM64 build verification"
+            echo "Commit: $(git rev-parse HEAD)"
+            echo "Version: $(cat version.txt)"
+            echo "Network: $NET_NAME"
+            echo "Original network SHA256: $(sha256sum "$NET_FILE" | cut -d' ' -f1)"
+            echo "NEON: $(file "$NEON")"
+            echo "DotProd: $(file "$DOTPROD")"
+            echo "NEON instruction check: passed (no SDOT)"
+            echo "DotProd instruction check: passed (SDOT found)"
+          } | tee build/verification/diagnostic-report.txt
+
+      - name: Upload Android ARM64 NEON engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: raphael-android-arm64-neon
+          path: |
+            build/android/neon/raphael-android-arm64-neon
+            build/verification/diagnostic-report.txt
+          if-no-files-found: error
+
+      - name: Upload Android ARM64 DotProd engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: raphael-android-arm64-dotprod
+          path: |
+            build/android/dotprod/raphael-android-arm64-dotprod
+            build/verification/diagnostic-report.txt
+          if-no-files-found: error
+
+      - name: Upload x86-64 AVX2 reference and logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: raphael-x86-64-avx2-reference
+          path: |
+            build/raphael-reference
+            build/reference-test.txt
+            build/reference-bench.txt
+          if-no-files-found: error
