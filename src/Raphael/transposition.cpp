@@ -3,6 +3,8 @@
 #include <Raphael/utils.h>
 
 #include <cstring>
+#include <cstdlib>
+#include <new>
 #include <thread>
 
 #ifdef _WIN32
@@ -217,13 +219,27 @@ void TranspositionTable::allocate(usize newsize) {
     const usize newsize_s = ((newsize * CLUSTER_SIZE + page_size - 1) / page_size) * page_size;
     capacity_ = newsize_s / CLUSTER_SIZE;
 
-#if defined(__linux__)
-    table_ = static_cast<Cluster*>(aligned_alloc(page_size, newsize_s));
-    madvise(table_, newsize_s, MADV_HUGEPAGE);
-#elif defined(_WIN32)
+#if defined(_WIN32)
     table_ = static_cast<Cluster*>(_aligned_malloc(newsize_s, page_size));
+    if (table_ == nullptr) {
+        capacity_ = 0;
+        throw std::bad_alloc{};
+    }
 #else
-    table_ = static_cast<Cluster*>(aligned_alloc(page_size, newsize_s));
+    // aligned_alloc is not available in all Android API levels. POSIX
+    // posix_memalign is supported by Android API 24 and preserves the
+    // page-size alignment required by the transposition table.
+    void* allocation = nullptr;
+    const int allocation_error = ::posix_memalign(&allocation, page_size, newsize_s);
+    if (allocation_error != 0 || allocation == nullptr) {
+        capacity_ = 0;
+        throw std::bad_alloc{};
+    }
+    table_ = static_cast<Cluster*>(allocation);
+
+#if defined(__linux__)
+    (void)madvise(table_, newsize_s, MADV_HUGEPAGE);
+#endif
 #endif
 }
 
@@ -235,7 +251,7 @@ void TranspositionTable::deallocate() {
 #ifdef _WIN32
         _aligned_free(table_);
 #else
-        free(table_);
+        std::free(table_);
 #endif
 
         capacity_ = 0;
